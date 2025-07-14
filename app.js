@@ -21,7 +21,7 @@ sql.connect((err) => {
 
 
 app.get('/login',(req ,res)=>{
-
+    res.send('hello world')
 })
 
 
