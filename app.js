@@ -32,11 +32,21 @@ sql.connect((err) => {
 
 // === ROUTES ===
 
-// Show login page
+// Routes
 app.get('/', (req, res) => {
-    res.render('logins'); // views/logins.ejs
+    res.render('home', { user: req.session.user, messages: req.flash('success')});
 });
 
+app.get('/login', (req, res) => {
+    res.render('login', { 
+        messages: req.flash('success'), //retrieve success messages
+        errors: req.flash('error'), //retrieve error messages
+    }); // views/login.ejs
+});
+
+app.post('/login', (req, res) => {
+//insert code here
+});
 // Show register page
 app.get('/register', (req, res) => {
     res.render('register'); // views/register.ejs
