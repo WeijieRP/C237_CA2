@@ -13,14 +13,26 @@ const sql =mysql.createConnection({
 })
 sql.connect((err) => { 
     if (err) {
-        console.error('Error connecting to the databases:', err);
+        console.error('Error connecting to the databases1:', err);
         return;
     }
     console.log('Connected to the databases12');
 })
 
 
+app.get('/login',(req ,res)=>{
 
+})
+
+
+app.post("register", (req ,res)=>{
+
+})
+
+app.get("/dashboard", (req , res)=>{
+    
+})
+app.get("/register")
 
 
 
