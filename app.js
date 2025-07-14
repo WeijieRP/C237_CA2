@@ -13,11 +13,12 @@ const sql =mysql.createConnection({
 })
 sql.connect((err) => { 
     if (err) {
-        console.error('Error connecting to the database:', err);
+        console.error('Error connecting to the databases:', err);
         return;
     }
-    console.log('Connected to the database');
+    console.log('Connected to the databases12');
 })
+
 
 
 
