@@ -6,6 +6,13 @@
 </head>
 <body>
   <h1>All CCA Entries</h1>
+  <form method="GET" action="/dashboard">
+    <input type="text" name="search" placeholder="Search by title" value="<%= typeof search !== 'undefined' ? search : '' %>">
+    <button type="submit">Search</button>
+  </form>
+
+<br>
+
 
   <table border="1" cellpadding="8">
     <tr>
@@ -15,6 +22,26 @@
       <th>Hours</th>
       <th>Description</th>
       <th>Actions</th>
+      <% if (entries.length === 0) { %>
+  <tr>
+    <td colspan="6">No CCA entries found.</td>
+  </tr>
+<% } else { %>
+  <% entries.forEach(entry => { %>
+    <tr>
+      <td><%= entry.title %></td>
+      <td><%= entry.date.toISOString().split('T')[0] %></td>
+      <td><%= entry.role %></td>
+      <td><%= entry.hours %></td>
+      <td><%= entry.description %></td>
+      <td>
+        <a href="/editCCA/<%= entry.id %>">Edit</a> |
+        <a href="/deleteCCA/<%= entry.id %>">Delete</a>
+      </td>
+    </tr>
+   <% }) %>
+ <% } %>
+
     </tr>
 
     <% entries.forEach(entry => { %>
@@ -25,8 +52,8 @@
         <td><%= entry.hours %></td>
         <td><%= entry.description %></td>
         <td>
-          <a href="/editCca/<%= entry.id %>">Edit</a> |
-          <a href="/deleteCca/<%= entry.id %>">Delete</a>
+          <a href="/editCCA/<%= entry.id %>">Edit</a> |
+          <a href="/deleteCCA/<%= entry.id %>">Delete</a>
         </td>
       </tr>
     <% }) %>
