@@ -29,7 +29,9 @@ app.post("register", (req ,res)=>{
 
 })
 
-
+app.get("/dashboard", (req , res)=>{
+    
+})
 app.get("/register")
 
 
