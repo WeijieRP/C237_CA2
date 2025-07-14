@@ -6,10 +6,10 @@ const app = express();
 app.use(express.json());
 
 const sql =mysql.createConnection({
-    host: 'localhost',
-    password:"123456789102345popA",
-    user:"root",
-    database:"testdb",
+    // host: 'localhost',
+    // password:"123456789102345popA",
+    // user:"root",
+    // database:"testdb",
 })
 sql.connect((err) => { 
     if (err) {
