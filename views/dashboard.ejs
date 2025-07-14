@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CCA Dashboard</title>
+</head>
+<body>
+  <h1>All CCA Entries</h1>
+
+  <table border="1" cellpadding="8">
+    <tr>
+      <th>Title</th>
+      <th>Date</th>
+      <th>Role</th>
+      <th>Hours</th>
+      <th>Description</th>
+      <th>Actions</th>
+    </tr>
+
+    <% entries.forEach(entry => { %>
+      <tr>
+        <td><%= entry.title %></td>
+        <td><%= entry.date.toISOString().split('T')[0] %></td>
+        <td><%= entry.role %></td>
+        <td><%= entry.hours %></td>
+        <td><%= entry.description %></td>
+        <td>
+          <a href="/editCca/<%= entry.id %>">Edit</a> |
+          <a href="/deleteCca/<%= entry.id %>">Delete</a>
+        </td>
+      </tr>
+    <% }) %>
+  </table>
+
+  <br>
+  <a href="/addCCA"> Add New CCA Entry</a>
+</body>
+</html>

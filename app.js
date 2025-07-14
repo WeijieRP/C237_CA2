@@ -79,6 +79,24 @@ app.post('/register', (req, res) => {
 app.get('/dashboard', (req, res) => {
     res.render('dashboard'); // views/dashboard.ejs
 });
+app.get('/editCCA/:id',(req,res)=>{
+    res.render('editCCA');
+})
+app.post('/editCCA/:id', (req, res) => {
+    const ccaId = req.params.id;
+    const { title, date, role, hours, description } = req.body;
+
+    const sql = 'UPDATE cca_entries SET title = ?, date = ?, role = ?, hours = ?, description = ? WHERE id = ?';
+
+    connection.query(sql, [title, date, role, hours, description, ccaId], (error, results) => {
+        if (error) {
+            console.error('Error updating CCA entry:', error.message);
+            return res.status(500).send('Error updating CCA entry');
+        }
+        res.redirect('/dashboard'); // redirect to dashboard or main list
+    });
+});
+
 
 // Start server
 app.listen(3000, () => {
