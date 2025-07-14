@@ -26,7 +26,7 @@ app.get('/login',(req ,res)=>{
 
 
 app.post("register", (req ,res)=>{
-
+    
 })
 
 app.get("/dashboard", (req , res)=>{
