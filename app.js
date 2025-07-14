@@ -6,6 +6,14 @@ const app = express();
 const session = require("express-session");
 const flash = require("connect-flash");
 
+app.use(session({
+    secret: 'Secret',
+    resave:false,
+    saveUninitialized: true,
+    cookie:{maxAge:1000*24*60*7}
+}))
+app.use(flash());   
+app.use(express.Router())
 // Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -30,12 +38,20 @@ sql.connect((err) => {
 });
 */
 
+
 // === ROUTES ===
 
 // Routes
 app.get('/', (req, res) => {
-    res.render('home', { user: req.session.user, messages: req.flash('success')});
+
+    res.render('logins', {success:req.flash('success'), errors: req.flash('error')}); // views/logins.ejs
 });
+app.post("/login", (req , res)=>{
+
+})
+// app.get('/', (req, res) => {
+//     res.render('home', { user: req.session.user, messages: req.flash('success')});
+// });
 
 app.get('/login', (req, res) => {
     res.render('login', { 
