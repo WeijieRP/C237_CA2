@@ -20,7 +20,17 @@ sql.connect((err) => {
 })
 
 
+app.get('/login',(req ,res)=>{
 
+})
+
+
+app.post("register", (req ,res)=>{
+
+})
+
+
+app.get("/register")
 
 
 app.listen(3000, () => {  
