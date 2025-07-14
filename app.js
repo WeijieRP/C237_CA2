@@ -3,6 +3,9 @@ const multer = require("multer");
 const mysql = require("mysql2");
 const app = express();
 
+const session = require("express-session");
+const flash = require("connect-flash");
+
 // Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
