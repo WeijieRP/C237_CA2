@@ -77,8 +77,17 @@ app.post('/register', (req, res) => {
 
 // Show dashboard (after login)
 app.get('/dashboard', (req, res) => {
-    res.render('dashboard'); // views/dashboard.ejs
+  const search = req.query.search || '';
+  const sql = "SELECT * FROM cca_entries WHERE title LIKE ?";
+  connection.query(sql, [`%${search}%`], (err, results) => {
+    if (err) {
+      console.error('Error retrieving CCA entries:', err.message);
+      return res.status(500).send('Error loading dashboard');
+    }
+    res.render('dashboard', { entries: results, search: search });
+  });
 });
+
 app.get('/editCCA/:id',(req,res)=>{
     res.render('editCCA');
 })
