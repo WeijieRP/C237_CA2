@@ -93,39 +93,39 @@ connection.connect((err) => {
 //     res.render('home', { user: req.session.user, messages: req.flash('success')});
 // });
 
-app.get('/login', authuticationsUser , checkUserRoles, (req, res) => {
-    res.render('login', { 
-        messages: req.flash('success'), //retrieve success messages
-        errors: req.flash('error'), //retrieve error messages
-    }); // views/login.ejs
-});
+// app.get('/login', authuticationsUser , checkUserRoles, (req, res) => {
+//     res.render('login', { 
+//         messages: req.flash('success'), //retrieve success messages
+//         errors: req.flash('error'), //retrieve error messages
+//     }); // views/login.ejs
+// });
 
-app.post('/login', (req, res) => {
-//insert code here
-});
-// Show register page
-app.get('/register', (req, res) => {
-    res.render('register'); // views/register.ejs
-});
+// app.post('/login', (req, res) => {
+// //insert code here
+// });
+// // Show register page
+// app.get('/register', (req, res) => {
+//     res.render('register'); // views/register.ejs
+// });
 
-// Handle register form
-app.post('/register', (req, res) => {
-    const { username ,email ,  password , roles} = req.body;
-    if(!username ||!email|| !password ||!roles){
-        req.flash('error', 'Please fill in all fields');
-        return res.redirect('/register');
-    }
-    sql = "INSERT INTO users (username, email , password , roles) VALUES(?,? , SHA1(?),?)";
-    mysql.query(sql , [username , email , password , roles], (error , results)=>{
-        if(error){
-            throw error;
-        }else{
-            req.flash('success', 'Registration successful! You can now log in.');
-            res.redirect('/login');
-        }
-    })
+// // Handle register form
+// app.post('/register', (req, res) => {
+//     const { username ,email ,  password , roles} = req.body;
+//     if(!username ||!email|| !password ||!roles){
+//         req.flash('error', 'Please fill in all fields');
+//         return res.redirect('/register');
+//     }
+//     sql = "INSERT INTO users (username, email , password , roles) VALUES(?,? , SHA1(?),?)";
+//     mysql.query(sql , [username , email , password , roles], (error , results)=>{
+//         if(error){
+//             throw error;
+//         }else{
+//             req.flash('success', 'Registration successful! You can now log in.');
+//             res.redirect('/login');
+//         }
+//     })
 
-});
+// });
 
 // IG events GET route 
 app.get('/events', (req, res) => {
@@ -142,8 +142,18 @@ app.get('/events', (req, res) => {
 //display each individual event
 app.get('/events/:id', (req, res) => {
     const eventId  = req.params.id;
-    
-
+    const sql = "SELECT * FROM events WHERE id=?";
+    connection.query(sql , [eventId], (error , results) => {
+        if (error) {
+            req.flash('error', 'Error fetching event details');
+            return res.redirect('/events');
+        }      
+        if(results.length === 0) {
+            req.flash('error', 'Event not found');
+            return res.redirect('/events');
+        }   
+        res.render('eventDetails', { event: results[0] }); // views/eventDetails.ejs
+    })
 })
 
 app.post("/events")
