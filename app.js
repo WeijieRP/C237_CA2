@@ -37,23 +37,48 @@ sql.connect((err) => {
     console.log('✅ Connected to MySQL database');
 });
 */
+//authutications
+const authuticationsUser=(req , res , next)=>{
+    if(req.session.user){
+        next();
+    }else{
+       req.flash('error', 'You must be logged in to access this page');
+        res.redirect('/login');
+    }
+}
+
+
+//checking Users Roles  isnt admin or normal users
+const checkUserRoles=(req , res,next)=>{
+    if(req.session.role === 'admin'){
+        res.redirect("/dashboard");
+    }
+    else{
+         next();
+    }
+   
+}
+
 
 
 // === ROUTES ===
 
 // Routes
+
 app.get('/', (req, res) => {
 
     res.render('logins', {success:req.flash('success'), errors: req.flash('error')}); // views/logins.ejs
 });
 app.post("/login", (req , res)=>{
 
+
 })
+
 // app.get('/', (req, res) => {
 //     res.render('home', { user: req.session.user, messages: req.flash('success')});
 // });
 
-app.get('/login', (req, res) => {
+app.get('/login', authuticationsUser , checkUserRoles, (req, res) => {
     res.render('login', { 
         messages: req.flash('success'), //retrieve success messages
         errors: req.flash('error'), //retrieve error messages
@@ -70,9 +95,21 @@ app.get('/register', (req, res) => {
 
 // Handle register form
 app.post('/register', (req, res) => {
-    // You'll handle the form logic here
-    console.log(req.body);
-    res.send('Register POST received');
+    const { username , password , roles} = req.body;
+    if(!username || !password ||!roles){
+        req.flash('error', 'Please fill in all fields');
+        return res.redirect('/register');
+    }
+    sql = "INSERT INTO users (username , password , roles) VALUES(?, SHA1(?),?)";
+    mysql.query(sql , [username , password , roles], (error , results)=>{
+        if(error){
+            throw error;
+        }else{
+            req.flash('success', 'Registration successful! You can now log in.');
+            res.redirect('/login');
+        }
+    })
+
 });
 
 // Show dashboard (after login)
