@@ -44,10 +44,10 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
     if (err) {
-        console.error('❌ Database connection error:', err);
+        console.error('❌ Database connection error1:', err);
         return;
     }
-    console.log('✅ Connected to MySQL database');
+    console.log('✅ Connected to MySQL database1');
 });
 
 
