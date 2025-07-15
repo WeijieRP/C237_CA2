@@ -35,11 +35,11 @@ app.use(express.static('public')); // ✅ to serve Lottie and other assets
 
 // MySQL connection (Uncomment and configure when ready)
 const connection = mysql.createConnection({
-    host: 'fmwzyq.h.filess.io',
-    user: 'RPCCAdatabase_chosesheet',
-    password: 'f03e42af695a473bd5d1240c71a51a25166a5b22',
-    database: 'RPCCAdatabase_chosesheet',
-    port:3307
+    host: 'localhost',
+    user: 'root',
+    password: 'Group5@123?',
+    database: 'igconnect',
+    
 });
 
 connection.connect((err) => {
