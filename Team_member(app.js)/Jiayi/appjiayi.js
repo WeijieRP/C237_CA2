@@ -33,3 +33,13 @@ app.use(session({
     //session expires after 1 week of inactivity
     cookie:{maxAge:1000*60*60*24*7}
 }));
+
+//******** TODO: Create a Middleware to check if user is admin. ********//
+const checkAdmin= (req,res,next)=>{
+    if (req.session.user.role === 'admin'){
+        return next();
+    } else{
+        req.flash('error',"Access denied");
+        res.redirect('/dashboard');
+    }
+};
