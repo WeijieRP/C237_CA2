@@ -51,6 +51,7 @@ app.use(session({
 
 app.use(flash());
 
+// Define routes
 app.get('/galleries',  (req, res) => {
         const sql = "SELECT * FROM galleries";
         mysql.query(sql, (error, results) => {
@@ -61,16 +62,6 @@ app.get('/galleries',  (req, res) => {
         res.render('events', { galleries: results });
     });
 }); 
-
-
-app.get('/inventory', checkAuthenticated, checkAdmin, (req, res) => {
-    // Fetch data from MySQL
-    connection.query('SELECT * FROM products', (error, results) => {
-      if (error) throw error;
-      res.render('inventory', { products: results, user: req.session.user });
-    });
-});
-
 
 app.get('/galleries/:id', (req, res) => {
   // Extract the gallery ID from the request parameters
