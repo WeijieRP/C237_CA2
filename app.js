@@ -6,6 +6,19 @@ const app = express();
 const session = require("express-session");
 const flash = require("connect-flash");
 
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'proof-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
 app.use(session({
     secret: 'Secret',
     resave:false,
@@ -21,22 +34,23 @@ app.set('view engine', 'ejs');
 app.use(express.static('public')); // ✅ to serve Lottie and other assets
 
 // MySQL connection (Uncomment and configure when ready)
-/*
-const sql = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'yourpassword',
-    database: 'yourdbname'
+const connection = mysql.createConnection({
+    host: 'fmwzyq.h.filess.io',
+    user: 'RPCCAdatabase_chosesheet',
+    password: 'f03e42af695a473bd5d1240c71a51a25166a5b22',
+    database: 'RPCCAdatabase_chosesheet',
+    port:3307
 });
 
-sql.connect((err) => {
+connection.connect((err) => {
     if (err) {
         console.error('❌ Database connection error:', err);
         return;
     }
     console.log('✅ Connected to MySQL database');
 });
-*/
+
+
 //authutications
 const authuticationsUser=(req , res , next)=>{
     if(req.session.user){
@@ -95,13 +109,13 @@ app.get('/register', (req, res) => {
 
 // Handle register form
 app.post('/register', (req, res) => {
-    const { username , password , roles} = req.body;
-    if(!username || !password ||!roles){
+    const { username ,email ,  password , roles} = req.body;
+    if(!username ||!email|| !password ||!roles){
         req.flash('error', 'Please fill in all fields');
         return res.redirect('/register');
     }
-    sql = "INSERT INTO users (username , password , roles) VALUES(?, SHA1(?),?)";
-    mysql.query(sql , [username , password , roles], (error , results)=>{
+    sql = "INSERT INTO users (username, email , password , roles) VALUES(?,? , SHA1(?),?)";
+    mysql.query(sql , [username , email , password , roles], (error , results)=>{
         if(error){
             throw error;
         }else{
@@ -125,23 +139,42 @@ app.get('/dashboard', (req, res) => {
   });
 });
 
-app.get('/editCCA/:id',(req,res)=>{
-    res.render('editCCA');
-})
-app.post('/editCCA/:id', (req, res) => {
+app.get('/editCCA/:id', (req, res) => {
     const ccaId = req.params.id;
-    const { title, date, role, hours, description } = req.body;
-
-    const sql = 'UPDATE cca_entries SET title = ?, date = ?, role = ?, hours = ?, description = ? WHERE id = ?';
-
-    connection.query(sql, [title, date, role, hours, description, ccaId], (error, results) => {
-        if (error) {
-            console.error('Error updating CCA entry:', error.message);
-            return res.status(500).send('Error updating CCA entry');
+    connection.query('SELECT * FROM cca_entries WHERE id = ?', [ccaId], (err, result) => {
+        if (err) {
+            return res.status(500).send("Error loading entry");
         }
-        res.redirect('/dashboard'); // redirect to dashboard or main list
+        res.render('editCCA', { entry: result[0] });
     });
 });
+
+app.post('/editCCA/:id', upload.single('file'), (req, res) => {
+    const ccaId = req.params.id;
+    const { title, date, role, hours, description, category, feedback } = req.body;
+    const file = req.file ? req.file.filename : null;
+
+    // Build SQL dynamically
+    let sql = `UPDATE cca_entries SET title = ?, date = ?, role = ?, hours = ?, category = ?, description = ?, feedback = ?`;
+    const values = [title, date, role, hours, category, description, feedback];
+
+    if (file) {
+        sql += `, proof_file = ?`;
+        values.push(file);
+    }
+
+    sql += ` WHERE id = ?`;
+    values.push(ccaId);
+
+    connection.query(sql, values, (error, results) => {
+        if (error) {
+            console.error('❌ Error updating CCA entry:', error.message);
+            return res.status(500).send('Error updating CCA entry');
+        }
+        res.redirect('/dashboard');
+    });
+});
+
 
 
 // Start server
