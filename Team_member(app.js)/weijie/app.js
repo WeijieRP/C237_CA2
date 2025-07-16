@@ -2,9 +2,13 @@ const express = require('express');
 const multer = require("multer");
 const mysql = require("mysql2");
 const app = express();
+const ejs =require('ejs');
+
+
 
 const session = require("express-session");
 const flash = require("connect-flash");
+const e = require('connect-flash');
 
 // const path = require('path');
 
