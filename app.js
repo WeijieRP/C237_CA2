@@ -56,7 +56,7 @@ const authuticationsUser=(req , res , next)=>{
     if(req.session.user){
         next();
     }else{
-       req.flash('error', 'You must be logged in to access this page');
+        req.flash('error', 'You must be logged in to access this page');
         res.redirect('/login');
     }
 }
@@ -67,9 +67,9 @@ const checkUserRoles=(req , res,next)=>{
         res.redirect("/dashboard");
     }
     else{
-         next();
+        next();
     }
-   
+
 }
 
 
@@ -127,15 +127,15 @@ app.post('/register', (req, res) => {
 
 // Show dashboard (after login)
 app.get('/dashboard', (req, res) => {
-  const search = req.query.search || '';
-  const sql = "SELECT * FROM cca_entries WHERE title LIKE ?";
-  connection.query(sql, [`%${search}%`], (err, results) => {
-    if (err) {
-      console.error('Error retrieving CCA entries:', err.message);
-      return res.status(500).send('Error loading dashboard');
-    }
-    res.render('dashboard', { entries: results, search: search });
-  });
+const search = req.query.search || '';
+const sql = "SELECT * FROM cca_entries WHERE title LIKE ?";
+connection.query(sql, [`%${search}%`], (err, results) => {
+if (err) {
+    console.error('Error retrieving CCA entries:', err.message);
+    return res.status(500).send('Error loading dashboard');
+}
+res.render('dashboard', { entries: results, search: search });
+});
 });
 
 app.get('/editCCA/:id', (req, res) => {
