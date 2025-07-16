@@ -39,7 +39,7 @@ const connection = mysql.createConnection({
     user: 'root',
     password: 'Group5@123?',
     database: 'igconnect',
-    
+
 });
 
 connection.connect((err) => {
@@ -60,7 +60,6 @@ const authuticationsUser=(req , res , next)=>{
         res.redirect('/login');
     }
 }
-
 
 //checking Users Roles  isnt admin or normal users
 const checkUserRoles=(req , res,next)=>{
