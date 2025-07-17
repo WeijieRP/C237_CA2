@@ -2,9 +2,13 @@ const express = require('express');
 const multer = require("multer");
 const mysql = require("mysql2");
 const app = express();
+const ejs =require('ejs');
+
+
 
 const session = require("express-session");
 const flash = require("connect-flash");
+const e = require('connect-flash');
 
 // const path = require('path');
 
@@ -27,10 +31,10 @@ app.use(session({
 }))
 
 app.use(flash());   
-app.use(express.Router())
+// app.use(express.Router())
 // Middleware setup
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.set('view engine', 'ejs');
 app.use(express.static('public')); // ✅ to serve Lottie and other assets
 
@@ -104,27 +108,27 @@ connection.connect((err) => {
 // //insert code here
 // });
 // // Show register page
-// app.get('/register', (req, res) => {
-//     res.render('register'); // views/register.ejs
-// });
+app.get('/register', (req, res) => {
+    res.render('register', {error:req.flash("error") , message : req.flash("success")}); // views/register.ejs
+});
 
-// // Handle register form
-// app.post('/register', (req, res) => {
-//     const { username ,email ,  password , roles} = req.body;
-//     if(!username ||!email|| !password ||!roles){
-//         req.flash('error', 'Please fill in all fields');
-//         return res.redirect('/register');
-//     }
-//     sql = "INSERT INTO users (username, email , password , roles) VALUES(?,? , SHA1(?),?)";
-//     mysql.query(sql , [username , email , password , roles], (error , results)=>{
-//         if(error){
-//             throw error;
-//         }else{
-//             req.flash('success', 'Registration successful! You can now log in.');
-//             res.redirect('/login');
-//         }
-//     })
-
+// Handle register form
+app.post('/register', (req, res) => {
+    const { username ,email ,  password , roles} = req.body;
+    if(!username ||!email|| !password ||!roles){
+        req.flash('error', 'Please fill in all fields');
+        return res.redirect('/register');
+    }
+    sql = "INSERT INTO users (username, email , password , roles) VALUES(?,? , SHA1(?),?)";
+    mysql.query(sql , [username , email , password , roles], (error , results)=>{
+        if(error){
+            throw error;
+        }else{
+            req.flash('success', 'Registration successful! You can now log in.');
+            res.redirect('/login');
+        }
+    })
+})
 // });
 
 // IG events GET route 
@@ -136,9 +140,10 @@ app.get('/events', (req, res) => {
             req.flash('error', 'Error fetching events');
             return res.redirect('/');
         }
-        res.render('events', { events: results }); // views/events.ejs
+        res.render('events', { events: results  ,message : req.flash("success") , error:req.flash("error")}); // views/events.ejs
     });
 }); 
+
 //display each individual event
 app.get('/events/:id', (req, res) => {
     const eventId  = req.params.id;
@@ -152,11 +157,13 @@ app.get('/events/:id', (req, res) => {
             req.flash('error', 'Event not found');
             return res.redirect('/events');
         }   
-        res.render('eventDetails', { event: results[0] }); // views/eventDetails.ejs
+        res.render('viewsEvents', { event: results[0], message : req.flash("success") , error : req.flash("error") }); // views/eventDetails.ejs
     })
 })
 
-app.post("/events")
+app.post("/events", (req , res)=>{
+    //
+})
 
 
 // Start server
