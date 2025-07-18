@@ -1,6 +1,7 @@
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
 const mysql = require("mysql2");
+<<<<<<< HEAD
 require('dotenv').config();
 
 // ✅ MySQL Connection
@@ -41,21 +42,54 @@ module.exports = function (passport) {
 
     const checkSQL = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
     connection.query(checkSQL, [email, provider], (err, results) => {
+=======
+const connection = mysql.createConnection({ /* same config */ });
+
+module.exports = function(passport) {
+  passport.serializeUser((user, done) => done(null, user));
+  passport.deserializeUser((user, done) => done(null, user));
+
+  // GOOGLE STRATEGY
+  passport.use(new GoogleStrategy({
+    clientID: 'YOUR_GOOGLE_CLIENT_ID',
+    clientSecret: 'YOUR_GOOGLE_CLIENT_SECRET',
+    callbackURL: "/auth/google/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    const email = profile.emails[0].value;
+    const oauth_id = profile.id;
+    const provider = 'google';
+
+    const sql = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
+    connection.query(sql, [email, provider], (err, results) => {
+>>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
       if (err) return done(err);
 
       if (results.length > 0) return done(null, results[0]);
 
+<<<<<<< HEAD
       const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
       connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err) => {
         if (err) return done(err);
         connection.query(checkSQL, [email, provider], (err2, newUser) => {
           if (err2) return done(err2);
+=======
+      // Insert new Google user
+      const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
+      const username = profile.displayName;
+      const roles = null;
+
+      connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err, result) => {
+        if (err) return done(err);
+        connection.query(sql, [email, provider], (err2, newUser) => {
+>>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
           return done(null, newUser[0]);
         });
       });
     });
   }));
 
+<<<<<<< HEAD
   // 🐱 GitHub OAuth Strategy
   passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
@@ -72,18 +106,47 @@ module.exports = function (passport) {
 
     const checkSQL = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
     connection.query(checkSQL, [email, provider], (err, results) => {
+=======
+  // GITHUB STRATEGY
+  passport.use(new GitHubStrategy({
+    clientID: 'YOUR_GITHUB_CLIENT_ID',
+    clientSecret: 'YOUR_GITHUB_CLIENT_SECRET',
+    callbackURL: "/auth/github/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    const email = profile.emails[0].value;
+    const oauth_id = profile.id;
+    const provider = 'github';
+
+    const sql = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
+    connection.query(sql, [email, provider], (err, results) => {
+>>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
       if (err) return done(err);
 
       if (results.length > 0) return done(null, results[0]);
 
+<<<<<<< HEAD
       const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
       connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err) => {
         if (err) return done(err);
         connection.query(checkSQL, [email, provider], (err2, newUser) => {
           if (err2) return done(err2);
+=======
+      const username = profile.username || profile.displayName;
+      const roles = null;
+
+      const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
+      connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err, result) => {
+        if (err) return done(err);
+        connection.query(sql, [email, provider], (err2, newUser) => {
+>>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
           return done(null, newUser[0]);
         });
       });
     });
   }));
+<<<<<<< HEAD
 };
+=======
+}
+>>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7

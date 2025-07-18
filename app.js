@@ -5,16 +5,18 @@ const passport = require('passport');
 const session = require('express-session');
 const flash = require("connect-flash");
 const path = require('path');
-const crypto = require('crypto');
-const expressLayouts = require('express-ejs-layouts');
-const app = express();
 
-app.use(expressLayouts);
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'proof-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
-app.set('layout', 'layout'); // Default layout
-require('./passport-config')(passport); // Google & GitHub setup
-require('dotenv').config(); // Load environment variables
-// Session & Flash
 app.use(session({
   secret: 'Secret',
   resave: false,
@@ -71,150 +73,54 @@ const authUser = (req, res, next) => {
 
 // Routes
 app.get('/', (req, res) => {
-  res.render('register', {messages:req.flash('success'), errors:req.flash('error')  });
+
+    res.render('logins', {success:req.flash('success'), errors: req.flash('error')}); // views/logins.ejs
 });
-//home 
+app.post("/login", (req , res)=>{
 
-app.get('/home', (req, res) => {
-  res.render('home');
-});
-// ======================
-// Normal Registration
-// ======================
-// app.get('/register', (req, res) => {
-//   res.render('register', {
-//     messages: req.flash('success'),
-//     errors: req.flash('error')
-//   });
-// });
 
-app.post('/register', (req, res) => {
-  const { username, email, password, roles } = req.body;
-  if (!username || !email || !password || !roles) {
-    req.flash('error', 'All fields are required!');
-    return res.redirect('/');
-  }
-
-  const hashed = crypto.createHash('sha1').update(password).digest('hex');
-  const sql = "INSERT INTO users (username, email, password, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, NULL, NULL)";
-  connection.query(sql, [username, email, hashed, roles], (err) => {
-    if (err) {
-      req.flash('error', err.code === 'ER_DUP_ENTRY' ? 'Email already registered.' : 'Registration failed.');
-      return res.redirect('/');
-    }
-    req.flash('success', 'Registration successful! You can now log in.');
-    res.redirect('/login');
-  });
-});
-
-// ======================
-// Normal Login
-// ======================
-app.get('/login', (req, res) => {
-  res.render('login', {
-    messages: req.flash('success'),
-    errors: req.flash('error')
-  });
-});
-//login if sucessully then it will store thr session 
-app.post('/login', (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
-    req.flash('error', 'Please enter email and password');
-    return res.redirect('/login');
-  }
-  //hashing here 
-  const hashed = crypto.createHash('sha1').update(password).digest('hex');
-  const sql = "SELECT * FROM users WHERE email = ? AND password = ?";
-  connection.query(sql, [email, hashed], (err, results) => {
-    if (err || results.length === 0) {
-      req.flash('error', 'Invalid credentials');
-      return res.redirect('/login');
-    }
-//set session 
-    const user = results[0];
-    req.session.user = user;
-    req.session.role = user.roles;
-    req.flash('success', 'Logged in successfully!');
-    res.redirect('/dashboard');
-  });
-});
-
-// ======================
-// Google OAuth
-// ======================
-app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  (req, res) => {
-    if (!req.user.username || !req.user.roles) {
-      req.session.oauthEmail = req.user.email;
-      req.session.oauthProvider = 'google';
-      return res.redirect('/complete-profile');
-    }
-    res.redirect('/dashboard');
-  }
-);
-
-// ======================
-// GitHub OAuth
-// ======================
-app.get('/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
-app.get('/auth/github/callback',
-  passport.authenticate('github', { failureRedirect: '/' }),
-  (req, res) => {
-    if (!req.user.username || !req.user.roles) {
-      req.session.oauthEmail = req.user.email;
-      req.session.oauthProvider = 'github';
-      return res.redirect('/complete-profile');
-    }
-    res.redirect('/dashboard');
-  }
-);
-app.get('/dashboard', (req , res)=>{
-  console.log(req.session.user);
-  if(!req.session.user){
-    req.flash('error', 'You must be logged in to access this page');
-    return res.redirect("/login")
-  }
 })
 
-// ======================
-// Complete Profile (for OAuth)
-app.get('/complete-profile', (req, res) => {
-  if (!req.session.oauthEmail) return res.redirect('/');
-  res.render('complete-profile', { email: req.session.oauthEmail });
+// app.get('/', (req, res) => {
+//     res.render('home', { user: req.session.user, messages: req.flash('success')});
+// });
+
+app.get('/login', authuticationsUser , checkUserRoles, (req, res) => {
+    res.render('login', { 
+        messages: req.flash('success'), //retrieve success messages
+        errors: req.flash('error'), //retrieve error messages
+    }); // views/login.ejs
 });
 
-app.post('/complete-profile', (req, res) => {
-  const { username, roles } = req.body;
-  const email = req.session.oauthEmail;
-  const provider = req.session.oauthProvider;
+app.post('/login', (req, res) => {
+//insert code here
+});
+// Show register page
+app.get('/register', (req, res) => {
+    res.render('register'); // views/register.ejs
+});
 
-  if (!username || !roles) {
-    req.flash('error', 'Please fill in all fields');
-    return res.redirect('/complete-profile');
-  }
-
-  const sql = `UPDATE users SET username = ?, roles = ? WHERE email = ? AND oauth_provider = ?`;
-  connection.query(sql, [username, roles, email, provider], (err) => {
-    if (err) {
-      req.flash('error', 'Database error');
-      return res.redirect('/complete-profile');
+// Handle register form
+app.post('/register', (req, res) => {
+    const { username ,email ,  password , roles} = req.body;
+    if(!username ||!email|| !password ||!roles){
+        req.flash('error', 'Please fill in all fields');
+        return res.redirect('/register');
     }
+    sql = "INSERT INTO users (username, email , password , roles) VALUES(?,? , SHA1(?),?)";
+    mysql.query(sql , [username , email , password , roles], (error , results)=>{
+        if(error){
+            throw error;
+        }else{
+            req.flash('success', 'Registration successful! You can now log in.');
+            res.redirect('/login');
+        }
+    })
 
-    delete req.session.oauthEmail;
-    delete req.session.oauthProvider;
-
-    req.flash('success', 'Profile completed!');
-    res.redirect('/dashboard');
-  });
 });
 
-// ======================
-// Dashboard
-// ======================
-app.get('/dashboard', authUser, (req, res) => {
+// Show dashboard (after login)
+app.get('/dashboard', (req, res) => {
   const search = req.query.search || '';
   const sql = "SELECT * FROM cca_entries WHERE title LIKE ?";
   connection.query(sql, [`%${search}%`], (err, results) => {
