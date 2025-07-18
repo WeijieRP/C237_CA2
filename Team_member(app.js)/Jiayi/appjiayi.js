@@ -3,14 +3,14 @@ const app = express();
 const path = require('path');
 const mysql = require('mysql2');
 
-// Set EJS as the view engine
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Serve static files (e.g., images, CSS, JavaScript)
+
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Middleware to parse incoming request bodies (for handling form submissions or POST requests)
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
