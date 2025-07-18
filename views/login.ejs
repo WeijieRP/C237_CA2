@@ -1,0 +1,74 @@
+<style>
+  body {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .glass-panel:hover {
+    box-shadow: 0 0 20px #ff9800, 0 0 30px #ffc107;
+    transform: scale(1.01);
+  }
+
+  .btn-primary {
+    background-color: #ff9800;
+    border: none;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 0 10px #ff9800;
+  }
+
+  .btn-primary:hover {
+    background-color: #fb8c00;
+    box-shadow: 0 0 20px #ffa726;
+  }
+</style>
+
+
+<div class="container mt-5">
+  <div class="row align-items-center justify-content-center">
+    <!-- Left side: Lottie -->
+    <div class="col-md-6 text-center">
+      <lottie-player
+        src="https://lottie.host/1f546161-57ba-448b-a8e9-1e19aafbc2f6/fBJvHDrP2n.json"
+        background="transparent"
+        speed="1"
+        style="width: 100%; max-width: 400px;"
+        loop autoplay>
+      </lottie-player>
+    </div>
+
+    <!-- Right side: Form -->
+    <div class="col-md-6">
+      <div class="glass-panel p-4">
+        <h2 class="text-center mb-4">Login</h2>
+        <form action="/login" method="POST">
+          <div class="mb-3">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label>Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+
+        <div class="text-center mt-3">
+          <p>Or login with:</p>
+          <a href="/auth/google" class="btn btn-outline-dark me-2">Google</a>
+          <a href="/auth/github" class="btn btn-outline-dark">GitHub</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

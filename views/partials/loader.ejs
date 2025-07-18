@@ -1,0 +1,42 @@
+<!-- views/partials/loader.ejs -->
+<div id="loader-screen">
+  <div id="lottie-loader" style="width: 200px; height: 200px;"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.0/lottie.min.js"></script>
+<script>
+  const loader = lottie.loadAnimation({
+    container: document.getElementById('lottie-loader'),
+    renderer: 'svg',
+    loop: false,
+    autoplay: true,
+    path: 'https://lottie.host/8315ccce-1767-451c-9623-3f6e7726bb46/g1Vcqs68mr.json'
+  });
+
+  loader.addEventListener('complete', () => {
+    document.getElementById('loader-screen').style.display = 'none';
+    const main = document.getElementById('main-screen');
+    if (main) main.classList.add('show');
+  });
+
+  setTimeout(() => {
+    document.getElementById('loader-screen').style.display = 'none';
+    const main = document.getElementById('main-screen');
+    if (main) main.classList.add('show');
+  }, 8000);
+</script>
+
+<style>
+  #loader-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #fff9f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+</style>
