@@ -33,17 +33,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Multer config
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'public/uploads/'),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'proof-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage });
+// // Multer config
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => cb(null, 'public/uploads/'),
+//   filename: (req, file, cb) => {
+//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//     cb(null, 'proof-' + uniqueSuffix + path.extname(file.originalname));
+//   }
+// });
+// const upload = multer({ storage });
 
-// MySQL setup
+// // MySQL setup
 
 const connection = mysql.createConnection({
   host: 'localhost',
