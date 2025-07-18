@@ -1,3 +1,38 @@
+const express = require('express');
+const app = express();
+const path = require('path');
+const mysql = require('mysql2');
+
+// Set EJS as the view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Serve static files (e.g., images, CSS, JavaScript)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Middleware to parse incoming request bodies (for handling form submissions or POST requests)
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'Group5@123?', 
+    database: 'igconnect' 
+});
+
+connection.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL:', err);
+        return;
+    }
+    console.log('Connected to MySQL database');
+});
+
+// Route to serve the chatbot page
+app.get('/chat', (req, res) => {
+    res.render('chatbot'); 
+});
 // View  all interest group
 app.get('/ig', (req, res) => {
     const sql = 'SELECT * FROM interest_groups';
@@ -167,5 +202,10 @@ app.get('/deleteCategory/:id', (req, res) => {
             res.redirect('/categories');
         }
     });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
 
