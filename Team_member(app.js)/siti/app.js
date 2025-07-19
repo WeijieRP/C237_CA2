@@ -1,8 +1,8 @@
 const express = require('express');
 const mysql = require('mysql2');
-const session = require('express-session'); 
-const flash = require('connect-flash');     
-const multer = require('multer');           
+const session = require('express-session');
+const flash = require('connect-flash');
+const multer = require('multer');
 
 const app = express();
 
@@ -24,7 +24,7 @@ connection.connect((err) => {
 // Set up multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'public/images'); // Directory to save uploaded files 
+        cb(null, 'public/images'); // Directory to save uploaded files
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname); 
@@ -168,41 +168,41 @@ app.get('/logout', (req, res) => {
 
 // --- IG ROLES ROUTES ---
 // View all IG roles
-app.get('/ig_roles', checkAuthenticated, (req, res) => { // Re-added checkAuthenticated
+app.get('/ig_roles', checkAuthenticated, (req, res) => {
     connection.query('SELECT * FROM ig_roles', (error, results) => {
         if (error) {
             console.error('Error fetching IG roles:', error);
             return res.status(500).send('Error fetching IG roles');
         }
-        res.render('ig_roles_list', { igRoles: results, user: req.session.user }); // Re-added user to context
+        res.render('ig_roles_list', { igRoles: results, user: req.session.user });
     });
 });
 
 // Add new IG role form
-app.get('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
-    res.render('addIgRole', { user: req.session.user }); // Re-added user to context
+app.get('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('addIgRole', { user: req.session.user });
 });
 
 // Add new IG role
-app.post('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.post('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => {
     const { title, description } = req.body;
     const sql = 'INSERT INTO ig_roles (title, description) VALUES (?, ?)';
     connection.query(sql, [title, description], (error, results) => {
         if (error) {
             console.error('Error adding IG role:', error);
             if (error.code === 'ER_DUP_ENTRY') {
-                req.flash('error', 'Role with this title already exists.'); // Re-added flash
+                req.flash('error', 'Role with this title already exists.');
                 return res.redirect('/addIgRole');
             }
             return res.status(500).send('Error adding IG role');
         }
-        req.flash('success', 'IG Role added successfully!'); // Re-added flash
+        req.flash('success', 'IG Role added successfully!');
         res.redirect('/ig_roles');
     });
 });
 
 // Get data for updating an IG role
-app.get('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.get('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const roleId = req.params.id;
     connection.query('SELECT * FROM ig_roles WHERE id = ?', [roleId], (error, results) => {
         if (error) {
@@ -210,7 +210,7 @@ app.get('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // 
             return res.status(500).send('Error fetching IG role');
         }
         if (results.length > 0) {
-            res.render('updateIgRole', { igRole: results[0], user: req.session.user }); // Re-added user to context
+            res.render('updateIgRole', { igRole: results[0], user: req.session.user });
         } else {
             res.status(404).send('IG Role not found');
         }
@@ -218,7 +218,7 @@ app.get('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // 
 });
 
 // Update IG role
-app.post('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.post('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const roleId = req.params.id;
     const { title, description } = req.body;
     const sql = 'UPDATE ig_roles SET title = ?, description = ? WHERE id = ?';
@@ -226,18 +226,18 @@ app.post('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { //
         if (error) {
             console.error('Error updating IG role:', error);
             if (error.code === 'ER_DUP_ENTRY') {
-                req.flash('error', 'Role with this title already exists.'); // Re-added flash
+                req.flash('error', 'Role with this title already exists.');
                 return res.redirect(`/updateIgRole/${roleId}`);
             }
             return res.status(500).send('Error updating IG role');
         }
-        req.flash('success', 'IG Role updated successfully!'); // Re-added flash
+        req.flash('success', 'IG Role updated successfully!');
         res.redirect('/ig_roles');
     });
 });
 
 // Delete IG role
-app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const roleId = req.params.id;
     // First, check if any members are associated with this role
     connection.query('SELECT COUNT(*) AS count FROM members WHERE role_id = ?', [roleId], (error, results) => {
@@ -246,7 +246,7 @@ app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // 
             return res.status(500).send('Error checking members');
         }
         if (results[0].count > 0) {
-            req.flash('error', 'Cannot delete role: Members are currently assigned to this role.'); // Re-added flash
+            req.flash('error', 'Cannot delete role: Members are currently assigned to this role.');
             return res.redirect('/ig_roles');
         }
 
@@ -256,7 +256,7 @@ app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // 
                 console.error('Error deleting IG role:', deleteError);
                 return res.status(500).send('Error deleting IG role');
             }
-            req.flash('success', 'IG Role deleted successfully!'); // Re-added flash
+            req.flash('success', 'IG Role deleted successfully!');
             res.redirect('/ig_roles');
         });
     });
@@ -265,7 +265,7 @@ app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => { // 
 
 // --- IG MEMBERS ROUTES ---
 // View all members
-app.get('/members', checkAuthenticated, (req, res) => { // Re-added checkAuthenticated
+app.get('/members', checkAuthenticated, (req, res) => {
     const sql = `
         SELECT m.id, m.student_id, m.ig_id, ir.title AS role_name, m.joined_date
         FROM members m
@@ -276,24 +276,24 @@ app.get('/members', checkAuthenticated, (req, res) => { // Re-added checkAuthent
             console.error('Error fetching members:', error);
             return res.status(500).send('Error fetching members');
         }
-        res.render('members_list', { members: results, user: req.session.user }); // Re-added user to context
+        res.render('members_list', { members: results, user: req.session.user });
     });
 });
 
 // Add new member form
-app.get('/addMember', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.get('/addMember', checkAuthenticated, checkAdmin, (req, res) => {
     // Fetch roles to populate a dropdown
     connection.query('SELECT id, title FROM ig_roles', (error, roles) => {
         if (error) {
             console.error('Error fetching roles for add member form:', error);
             return res.status(500).send('Error fetching roles');
         }
-        res.render('addMember', { roles: roles, user: req.session.user }); // Re-added user to context
+        res.render('addMember', { roles: roles, user: req.session.user });
     });
 });
 
 // Add new member
-app.post('/addMember', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.post('/addMember', checkAuthenticated, checkAdmin, (req, res) => {
     const { student_id, ig_id, role_id, joined_date } = req.body;
     const sql = 'INSERT INTO members (student_id, ig_id, role_id, joined_date) VALUES (?, ?, ?, ?)';
     connection.query(sql, [student_id, ig_id, role_id, joined_date], (error, results) => {
@@ -301,13 +301,13 @@ app.post('/addMember', checkAuthenticated, checkAdmin, (req, res) => { // Re-add
             console.error('Error adding member:', error);
             return res.status(500).send('Error adding member');
         }
-        req.flash('success', 'Member added successfully!'); // Re-added flash
+        req.flash('success', 'Member added successfully!');
         res.redirect('/members');
     });
 });
 
 // Get data for updating a member's role
-app.get('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.get('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const memberId = req.params.id;
     const sqlMember = `
         SELECT m.id, m.student_id, m.ig_id, m.role_id, m.joined_date, ir.title AS role_name
@@ -329,13 +329,13 @@ app.get('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => { // 
             console.error('Error fetching roles for update member form:', roleError);
                 return res.status(500).send('Error fetching roles');
             }
-            res.render('updateMember', { member: memberResults[0], roles: roleResults, user: req.session.user }); // Re-added user to context
+            res.render('updateMember', { member: memberResults[0], roles: roleResults, user: req.session.user });
         });
     });
 });
 
 // Update member's role
-app.post('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.post('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const memberId = req.params.id;
     const { student_id, ig_id, role_id, joined_date } = req.body;
     const sql = 'UPDATE members SET student_id = ?, ig_id = ?, role_id = ?, joined_date = ? WHERE id = ?';
@@ -347,13 +347,13 @@ app.post('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => { //
         if (results.affectedRows === 0) {
             return res.status(404).send('Member not found');
         }
-        req.flash('success', 'Member updated successfully!'); // Re-added flash
+        req.flash('success', 'Member updated successfully!');
         res.redirect('/members');
     });
 });
 
 // Remove member
-app.get('/deleteMember/:id', checkAuthenticated, checkAdmin, (req, res) => { // Re-added checkAuthenticated, checkAdmin
+app.get('/deleteMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const memberId = req.params.id;
     connection.query('DELETE FROM members WHERE id = ?', [memberId], (error, results) => {
         if (error) {
@@ -363,13 +363,13 @@ app.get('/deleteMember/:id', checkAuthenticated, checkAdmin, (req, res) => { // 
         if (results.affectedRows === 0) {
             return res.status(404).send('Member not found');
         }
-        req.flash('success', 'Member removed successfully!'); // Re-added flash
+        req.flash('success', 'Member removed successfully!');
         res.redirect('/members');
     });
 });
 
 // Search members by IG and student name
-app.get('/searchMembers', checkAuthenticated, (req, res) => { // Re-added checkAuthenticated
+app.get('/searchMembers', checkAuthenticated, (req, res) => {
     const { ig_id, student_name } = req.query;
     let sql = `
         SELECT m.id, m.student_id, m.ig_id, ir.title AS role_name, m.joined_date
@@ -393,7 +393,7 @@ app.get('/searchMembers', checkAuthenticated, (req, res) => { // Re-added checkA
             console.error('Error searching members:', error);
             return res.status(500).send('Error searching members');
         }
-        res.render('members_list', { members: results, user: req.session.user, searchPerformed: true }); // Re-added user to context
+        res.render('members_list', { members: results, user: req.session.user, searchPerformed: true });
     });
 });
 
