@@ -62,7 +62,7 @@ const checkAuthenticated = (req, res, next) => {
         return next();
     } else {
         req.flash('error', 'Please log in to view this resource');
-        res.redirect('/login');
+        res.redirect('/login'); 
     }
 };
 
@@ -76,96 +76,6 @@ const checkAdmin = (req, res, next) => {
     }
 };
 
-// Middleware for form validation (for user registration)
-const validateRegistration = (req, res, next) => {
-    const { username, email, password, address, contact, role } = req.body;
-
-    if (!username || !email || !password || !address || !contact || !role) {
-        req.flash('error', 'All fields are required.');
-        req.flash('formData', req.body);
-        return res.redirect('/register');
-    }
-    
-    if (password.length < 6) {
-        req.flash('error', 'Password should be at least 6 or more characters long');
-        req.flash('formData', req.body);
-        return res.redirect('/register');
-    }
-    next();
-};
-
-// --- User Authentication Routes (Re-added as they are essential for roles/members access with session/flash) ---
-app.get('/',  (req, res) => {
-    res.render('index', {user: req.session.user} );
-});
-
-app.get('/register', (req, res) => {
-    res.render('register', { messages: req.flash('error'), formData: req.flash('formData')[0] });
-});
-
-app.post('/register', validateRegistration, (req, res) => {
-    const { username, email, password, address, contact, role } = req.body;
-    const sql = 'INSERT INTO users (username, email, password, address, contact, role) VALUES (?, ?, SHA1(?), ?, ?, ?)';
-    connection.query(sql, [username, email, password, address, contact, role], (err, result) => {
-        if (err) {
-            if (err.code === 'ER_DUP_ENTRY' && err.sqlMessage.includes('email')) {
-                req.flash('error', 'Email already registered.');
-                req.flash('formData', req.body);
-                return res.redirect('/register');
-            }
-            console.error('Error during registration:', err);
-            req.flash('error', 'Registration failed. Please try again.');
-            req.flash('formData', req.body);
-            return res.redirect('/register');
-        }
-        console.log(result);
-        req.flash('success', 'Registration successful! Please log in.');
-        res.redirect('/login');
-    });
-});
-
-app.get('/login', (req, res) => {
-    res.render('login', { messages: req.flash('success'), errors: req.flash('error') });
-});
-
-app.post('/login', (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        req.flash('error', 'All fields are required.');
-        return res.redirect('/login');
-    }
-
-    const sql = 'SELECT * FROM users WHERE email = ? AND password = SHA1(?)';
-    connection.query(sql, [email, password], (err, results) => {
-        if (err) {
-            console.error('Error during login:', err);
-            req.flash('error', 'An error occurred during login.');
-            return res.redirect('/login');
-        }
-
-        if (results.length > 0) {
-            req.session.user = results[0]; 
-            req.flash('success', 'Login successful!');
-            // Redirect based on role
-            if(req.session.user.role === 'admin') {
-                res.redirect('/members'); // Admins go to members list
-            } else {
-                res.redirect('/'); // Regular users go to home or a user dashboard
-            }
-        } else {
-            req.flash('error', 'Invalid email or password.');
-            res.redirect('/login');
-        }
-    });
-});
-
-app.get('/logout', (req, res) => {
-    req.session.destroy();
-    res.redirect('/');
-});
-
-
 // --- IG ROLES ROUTES ---
 // View all IG roles
 app.get('/ig_roles', checkAuthenticated, (req, res) => {
@@ -174,13 +84,13 @@ app.get('/ig_roles', checkAuthenticated, (req, res) => {
             console.error('Error fetching IG roles:', error);
             return res.status(500).send('Error fetching IG roles');
         }
-        res.render('ig_roles_list', { igRoles: results, user: req.session.user });
+        res.render('ig_roles_list', { igRoles: results, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
     });
 });
 
 // Add new IG role form
 app.get('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('addIgRole', { user: req.session.user });
+    res.render('addIgRole', { user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
 });
 
 // Add new IG role
@@ -210,7 +120,7 @@ app.get('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
             return res.status(500).send('Error fetching IG role');
         }
         if (results.length > 0) {
-            res.render('updateIgRole', { igRole: results[0], user: req.session.user });
+            res.render('updateIgRole', { igRole: results[0], user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
         } else {
             res.status(404).send('IG Role not found');
         }
@@ -276,7 +186,7 @@ app.get('/members', checkAuthenticated, (req, res) => {
             console.error('Error fetching members:', error);
             return res.status(500).send('Error fetching members');
         }
-        res.render('members_list', { members: results, user: req.session.user });
+        res.render('members_list', { members: results, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
     });
 });
 
@@ -288,7 +198,7 @@ app.get('/addMember', checkAuthenticated, checkAdmin, (req, res) => {
             console.error('Error fetching roles for add member form:', error);
             return res.status(500).send('Error fetching roles');
         }
-        res.render('addMember', { roles: roles, user: req.session.user });
+        res.render('addMember', { roles: roles, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
     });
 });
 
@@ -329,7 +239,7 @@ app.get('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
             console.error('Error fetching roles for update member form:', roleError);
                 return res.status(500).send('Error fetching roles');
             }
-            res.render('updateMember', { member: memberResults[0], roles: roleResults, user: req.session.user });
+            res.render('updateMember', { member: memberResults[0], roles: roleResults, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
         });
     });
 });
@@ -393,7 +303,7 @@ app.get('/searchMembers', checkAuthenticated, (req, res) => {
             console.error('Error searching members:', error);
             return res.status(500).send('Error searching members');
         }
-        res.render('members_list', { members: results, user: req.session.user, searchPerformed: true });
+        res.render('members_list', { members: results, user: req.session.user, searchPerformed: true, messages: req.flash('success'), errors: req.flash('error') });
     });
 });
 
