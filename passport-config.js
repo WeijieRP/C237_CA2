@@ -1,152 +1,81 @@
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const GitHubStrategy = require('passport-github2').Strategy;
-const mysql = require("mysql2");
-<<<<<<< HEAD
-require('dotenv').config();
 
-// ✅ MySQL Connection
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '123456789102345popA', // Replace with your actual MySQL password
-  database: 'igconnect'
-});
-
-module.exports = function (passport) {
-  // 🔐 Session: store only user ID
+module.exports = (passport, connection) => {
+  // 🔑 Serialize
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
 
-  // 🔓 Fetch user from DB by ID
+  // 🔓 Deserialize
   passport.deserializeUser((id, done) => {
-    const sql = `SELECT * FROM users WHERE id = ?`;
-    connection.query(sql, [id], (err, results) => {
+    connection.query('SELECT * FROM users WHERE id = ?', [id], (err, results) => {
       if (err) return done(err);
-      done(null, results[0]);
+      return done(null, results[0]);
     });
   });
 
-  // 🌐 Google OAuth Strategy
-  passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
-  },
-  (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails?.[0]?.value || `${profile.id}@google-placeholder.com`;
-    const oauth_id = profile.id;
-    const provider = 'google';
-    const username = profile.displayName;
-    const roles = null; // to be completed later
-
-    const checkSQL = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
-    connection.query(checkSQL, [email, provider], (err, results) => {
-=======
-const connection = mysql.createConnection({ /* same config */ });
-
-module.exports = function(passport) {
-  passport.serializeUser((user, done) => done(null, user));
-  passport.deserializeUser((user, done) => done(null, user));
-
-  // GOOGLE STRATEGY
-  passport.use(new GoogleStrategy({
-    clientID: 'YOUR_GOOGLE_CLIENT_ID',
-    clientSecret: 'YOUR_GOOGLE_CLIENT_SECRET',
-    callbackURL: "/auth/google/callback"
-  },
-  function(accessToken, refreshToken, profile, done) {
-    const email = profile.emails[0].value;
-    const oauth_id = profile.id;
-    const provider = 'google';
-
-    const sql = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
-    connection.query(sql, [email, provider], (err, results) => {
->>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
-      if (err) return done(err);
-
-      if (results.length > 0) return done(null, results[0]);
-
-<<<<<<< HEAD
-      const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
-      connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err) => {
+  // 🌐 Google Strategy
+  passport.use(
+    new GoogleStrategy({
+      clientID: 'YOUR_GOOGLE_CLIENT_ID',
+      clientSecret: 'YOUR_GOOGLE_CLIENT_SECRET',
+      callbackURL: '/auth/google/callback'
+    },
+    (accessToken, refreshToken, profile, done) => {
+      const email = profile.emails[0].value;
+      connection.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
         if (err) return done(err);
-        connection.query(checkSQL, [email, provider], (err2, newUser) => {
-          if (err2) return done(err2);
-=======
-      // Insert new Google user
-      const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
-      const username = profile.displayName;
-      const roles = null;
+        if (results.length > 0) return done(null, results[0]);
 
-      connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err, result) => {
-        if (err) return done(err);
-        connection.query(sql, [email, provider], (err2, newUser) => {
->>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
-          return done(null, newUser[0]);
-        });
+        // Register new user
+        const newUser = {
+          username: profile.displayName,
+          email: email,
+          roles: 'user'
+        };
+        connection.query(
+          'INSERT INTO users (username, email, roles) VALUES (?, ?, ?)',
+          [newUser.username, newUser.email, newUser.roles],
+          (err, result) => {
+            if (err) return done(err);
+            newUser.id = result.insertId;
+            return done(null, newUser);
+          }
+        );
       });
-    });
-  }));
+    })
+  );
 
-<<<<<<< HEAD
-  // 🐱 GitHub OAuth Strategy
-  passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: "/auth/github/callback",
-    scope: ['user:email']
-  },
-  (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails?.[0]?.value || `${profile.username}@noemail.github`;
-    const oauth_id = profile.id;
-    const provider = 'github';
-    const username = profile.username || profile.displayName;
-    const roles = null;
-
-    const checkSQL = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
-    connection.query(checkSQL, [email, provider], (err, results) => {
-=======
-  // GITHUB STRATEGY
-  passport.use(new GitHubStrategy({
-    clientID: 'YOUR_GITHUB_CLIENT_ID',
-    clientSecret: 'YOUR_GITHUB_CLIENT_SECRET',
-    callbackURL: "/auth/github/callback"
-  },
-  function(accessToken, refreshToken, profile, done) {
-    const email = profile.emails[0].value;
-    const oauth_id = profile.id;
-    const provider = 'github';
-
-    const sql = `SELECT * FROM users WHERE email = ? AND oauth_provider = ?`;
-    connection.query(sql, [email, provider], (err, results) => {
->>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
-      if (err) return done(err);
-
-      if (results.length > 0) return done(null, results[0]);
-
-<<<<<<< HEAD
-      const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
-      connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err) => {
+  // 🐙 GitHub Strategy
+  passport.use(
+    new GitHubStrategy({
+      clientID: 'YOUR_GITHUB_CLIENT_ID',
+      clientSecret: 'YOUR_GITHUB_CLIENT_SECRET',
+      callbackURL: '/auth/github/callback'
+    },
+    (accessToken, refreshToken, profile, done) => {
+      const email = profile.emails ? profile.emails[0].value : `${profile.username}@github.com`;
+      connection.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
         if (err) return done(err);
-        connection.query(checkSQL, [email, provider], (err2, newUser) => {
-          if (err2) return done(err2);
-=======
-      const username = profile.username || profile.displayName;
-      const roles = null;
+        if (results.length > 0) return done(null, results[0]);
 
-      const insertSQL = `INSERT INTO users (username, email, roles, oauth_provider, oauth_id) VALUES (?, ?, ?, ?, ?)`;
-      connection.query(insertSQL, [username, email, roles, provider, oauth_id], (err, result) => {
-        if (err) return done(err);
-        connection.query(sql, [email, provider], (err2, newUser) => {
->>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
-          return done(null, newUser[0]);
-        });
+        // Register new user
+        const newUser = {
+          username: profile.username,
+          email: email,
+          roles: 'user'
+        };
+        connection.query(
+          'INSERT INTO users (username, email, roles) VALUES (?, ?, ?)',
+          [newUser.username, newUser.email, newUser.roles],
+          (err, result) => {
+            if (err) return done(err);
+            newUser.id = result.insertId;
+            return done(null, newUser);
+          }
+        );
       });
-    });
-  }));
-<<<<<<< HEAD
+    })
+  );
 };
-=======
-}
->>>>>>> 6aacf68df608194bbe07dcccf1c1a878c56a7df7
