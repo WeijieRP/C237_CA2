@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Category</title>
+</head>
+<body>
+    <h1>Edit IG Category</h1>
+    <form action="/editCategory/<%= category.id %>" method="POST">
+        <label>Name:</label><input type="text" name="name" value="<%= category.name %>" required><br>
+        <label>Description:</label><textarea name="description"><%= category.description %></textarea><br>
+        <button type="submit">Update</button>
+    </form>
+</body>
+</html>
