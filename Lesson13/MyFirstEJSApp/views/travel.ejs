@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Travel Packing List</h1>
+    <table border="1">
+      <tr>
+            <th>Clothes</th>
+            <th>Toiletries</th>
+        </tr>
+        <tr>
+            <td>
+               <ol>
+                <% for(let i = 0; i < clothesList.length; i++) { %>    
+                    <li><%= clothesList[i] %></li>
+                <% } %>
+            </ol> 
+            </td>
+            <td>
+               <ol>
+                <% for(let i = 0; i < toiletriesList.length; i++) { %>    
+                    <li><%= toiletriesList[i] %></li>
+                <% } %>
+            </ol> 
+            </td>
+        </tr>
+        
+    </table>
+    <h2>Add items</h2>
+    <form action="/Additems" method="POST" id="formsubmission">
+       <p><label for="itemid">Items:</label>
+        <input id="itemid"  type="text" name="items"/>
+       </p>
+       <p>
+        <label for="categoryID">Category:</label>
+        <select name="options" id="categoryID">
+            <option value="Toiletries">Toiletries</option>
+            <option value="Clothes" >Clothes</option>
+        </select>
+       </p>
+       <button type="submit">Add to list</button>
+
+    </form>
+</body>
+</html>

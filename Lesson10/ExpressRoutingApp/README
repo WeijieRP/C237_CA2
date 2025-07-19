@@ -1,0 +1,4 @@
+Images used in this application are served via express.static() as part of Express’s built-in capability 
+to serve static assets like images, stylesheets, and JavaScript. 
+No external APIs, databases, or template engines are used.
+

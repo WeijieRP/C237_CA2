@@ -1,0 +1,52 @@
+body,:root {
+font-family: Arial;
+width: auto;
+height: auto;
+padding: 0;
+margin: 0;
+text-align: center;
+line-height: 1cm;
+}
+html{
+    scroll-behavior: smooth;
+}
+h1{
+    color:blue;
+    text-align: center;
+}
+ul {
+background-color: grey;
+}
+a:hover{
+    color: blue;
+}
+select{
+    width: auto;
+    height: 50px;
+    border-radius: 10px;
+}
+textarea{
+    
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+}
+
+[type="submit"] {
+    background-color: orange;
+    color: white;
+    border: none;
+    box-shadow:  10px 10px 10px black;
+    padding: 10px 20px;
+    cursor: pointer;
+   transition:ease-in-out 200ms;
+    border-radius: 5px;
+}
+[type="submit"]:hover{
+    transition:ease-in-out 200ms;
+    width: 300px;
+    background:blue;
+}
+html {
+    scroll-behavior: smooth;
+}

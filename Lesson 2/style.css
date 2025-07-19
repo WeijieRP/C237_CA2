@@ -1,0 +1,56 @@
+body {
+font-family: Arial;
+padding: 20px;
+width: auto;
+height: auto;
+text-align: center;
+line-height: 1cm;
+}
+h1{
+    color:blue;
+    text-align: center;
+}
+ul {
+background-color: grey;
+}
+a:hover{
+    color: blue;
+}
+@media screen and (max-width:900px) {
+    body{
+        text-align: left;
+        
+
+    }
+    h1{
+        text-align: left;
+    }
+}
+select{
+    width: auto;
+    height: 50px;
+    border-radius: 10px;
+}
+textarea{
+    
+    width: auto;
+    height: auto;
+    border-radius: 10px;
+}
+
+[type="submit"] {
+    background-color: orange;
+    color: white;
+    border: none;
+    box-shadow:  10px 10px 10px black;
+    padding: 10px 20px;
+    cursor: pointer;
+   transition:ease-in-out 200ms;
+    border-radius: 5px;
+}
+
+[type="submit"]:hover{
+    transition:ease-in-out 200ms;
+    width: 300px;
+    background:blue;
+}

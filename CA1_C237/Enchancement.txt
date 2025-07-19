@@ -1,0 +1,13 @@
+Modal Behavior & Form Handling,
+
+A new route for  Favorites page 
+
+Adds-ons Category Navigation
+
+Rendering a Conditional Layout
+
+Search and Filtering(sorting)
+
+UI/UX Improvements Using Boostrap(responsive design)
+
+Introudce a new route(more details)

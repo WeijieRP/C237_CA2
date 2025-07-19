@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Self Introductions Forms</title>
+    <link href="style.css" rel="stylesheet"/>
+
+</head>
+
+<body>
+    <h1>Self Introductions Form</h1>
+    <form method="post"  action="/action_page.php">
+    <p>Name: <input type="text" placeholder="Name" size="25" maxlength="45"></p>
+    <p>Gender:
+        <label for="Male">
+            <input type="radio" id="Male" name="Gender" value="Male" />
+            Male
+        </label>
+    
+        <label for="Female">
+            <input type="radio" id="Female" name="Gender" value="Female" />
+            Female
+        </label>
+    </p>
+    
+    <p>Email : <input type="email" placeholder="email address" required /></p>
+    <p>Phone <input type="number" placeholder="Phone Number" /></p>
+    <p>Date of Birth <input type="date" placeholder="dd/mm/yyyy"></p>
+    <p>School Year :</p>
+        <label for="Y1">
+            <input type="radio" id="Y1" name="Year" value="Y1" />
+            Y1
+        </label>
+    
+        <label for="Y2">
+            <input type="radio" id="Y2" name="Year" value="Y2" />
+            Y2
+        </label>
+        <label for="Y3">
+            <input type="radio" id="Y3" name="Year" value="Y3" />
+            Y3
+        </label>
+    <p>School:</p>
+        <select name="schools">
+            <option value="School of inforcomm">School of inforcomm</option>
+            <option value="School of Business">School of Business</option>
+            <option value="School of Applied Science">School of Applied Science</option>
+            <option value="School of Engineering">School of Engineering</option>
+            <option value="School of Hospitality">School of Hospitality</option>
+            <option value="School of Sports and Health">School of Sports and Health</option>
+            <option value="School of Technology for Arts , Media and Design">School of Technology for Arts , Media and Design</option>
+
+
+
+        </select>
+    
+    <p>Tell us more about Yourself</p>
+     <textarea rows="10" cols="40" wrap="hard"></textarea>
+
+    <p><button type="submit" value="Submit">Submit</button></p>
+    </form>
+    <p><a href="/SelfIntro.html">Back</a> to Intro Page</p>
+</body>
+
+</html>

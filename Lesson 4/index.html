@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home page</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="style.css" rel="stylesheet">
+  
+</head>
+
+<body class="body">
+
+<div class="container-fluid w-100">
+
+  <!-- Navbar -->
+  <div class="row">
+    <div class="col-lg-12">
+      <nav class="navbar navbar-expand-lg navbar-light mb-5" style="height: auto;">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="./index.html">
+            <img src="Image/logo/Book_place-removebg-preview.png" alt="Logo" style="max-width: 150px; height: auto;">
+          </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll" aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarScroll">
+            <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll" style="--bs-scroll-height: 100px;">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Books
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="./product_computer.html">Computer Book</a></li>
+                  <li><a class="dropdown-item" href="./product_children.html">Children Book</a></li>
+                </ul>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="./contact_us.html">Contact us</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Banner Image -->
+  <div class="container-fluid">
+    <img src="Image/logo/Books.jpg" class="w-100 img-fluid" alt="Banner"> 
+  </div>
+
+  <!-- Children Books Section -->
+  <div class="container mt-5">
+    <h1 class="text-center mb-5 mt-4">Children Books</h1>
+    <div class="row">
+      
+      <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <img src="Books/GoodNight_Moon.jpg" class="card-img-top" alt="GoodNight Moon">
+          <div class="card-body">
+            <h5 class="card-title">The GoodNight Moon</h5>
+            <p class="card-text">One of the most beloved books of all time, a must for every bookshelf.</p>
+            <a href="./Each_products/GoodNight.html" class="btn btn-danger w-100">View details</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <img src="Books/LittleEngine.jpg" class="card-img-top" alt="Little Engine">
+          <div class="card-body">
+            <h5 class="card-title">The Little Engine</h5>
+            <p class="card-text">Anniversary edition with reimagined artwork and a special letter from Dolly Parton.</p>
+            <a href="./Each_products/LittleEngine.html" class="btn btn-danger w-100">View details</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <img src="Books/EveryonePoops.jpg" class="card-img-top" alt="Everyone Poops">
+          <div class="card-body">
+            <h5 class="card-title">Everyone Poops</h5>
+            <p class="card-text">Perfect for potty-training and everyday fun reading for young children.</p>
+            <a href="./Each_products/EveryonPoops.html" class="btn btn-danger w-100">View details</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Computer Books Section -->
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">Computer Books</h1>
+    <div class="row">
+
+      <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <img src="Books/CompTIASecurity.jpg" class="card-img-top" alt="CompTIA Security">
+          <div class="card-body">
+            <h5 class="card-title">CompTIA Security</h5>
+            <p class="card-text">Complete resource for passing the Security+ exam on the first try.</p>
+            <a href="./Each_products/CompTIA.html" class="btn btn-danger w-100">View details</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <img src="Books/MachineLearn.jpg" class="card-img-top" alt="Machine Learning">
+          <div class="card-body">
+            <h5 class="card-title">The MachineLearn</h5>
+            <p class="card-text">Narrative explanation of math behind machine learning and AI.</p>
+            <a href="./Each_products/MachineLearn.html" class="btn btn-danger w-100">View details</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+          <img src="Books/Programmer.jpg" class="card-img-top" alt="Programmer">
+          <div class="card-body">
+            <h5 class="card-title">The Programmer</h5>
+            <p class="card-text">The Pragmatic Programmer is a must-read for software developers.</p>
+            <a href="./Each_products/Programmer.html" class="btn btn-danger w-100">View details</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="container-fluid bg-dark text-light pt-5 pb-3 mt-5">
+  <div class="row text-center text-md-start">
+
+    <!-- Logo Section -->
+    <div class="col-md-4 mb-4 d-flex justify-content-center align-items-center">
+      <img src="Image/logo/Book_place-removebg-preview.png" alt="Logo" style="max-width: 150px; height: auto;">
+    </div>
+
+    <!-- Links Section -->
+    <div class="col-md-4 mb-4 d-flex flex-column justify-content-center align-items-center">
+      <h5 class="mb-3">Quick Links</h5>
+      <ul class="list-unstyled">
+        <li><a href="./index.html" class="text-light text-decoration-none">Home</a></li>
+        <li><a href="./product_computer.html" class="text-light text-decoration-none">Computer Books</a></li>
+        <li><a href="./product_children.html" class="text-light text-decoration-none">Children Books</a></li>
+
+        <li><a href="./contact_us.html" class="text-light text-decoration-none">Contact Us</a></li>
+      </ul>
+    </div>
+
+    <!-- Subscribe Section -->
+    <div class="col-md-4 mb-4 d-flex flex-column justify-content-center align-items-center popoutemail">
+      <h5 class="mb-3">Subscribe to our Newsletter</h5>
+      <form class="w-100 px-3">
+        <div class="input-group">
+          <input type="email" class="form-control" placeholder="Enter your email" aria-label="Email" required>
+          <button class="btn btn-danger buttonpop" type="submit" >Subscribe</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Bottom Text -->
+  <div class="row mt-4">
+    <div class="col text-center">
+      <p class="mb-0">&copy; 2025 BookPlace. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+<script src="popout.js" type="text/javascript"></script>
+</html>
