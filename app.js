@@ -72,6 +72,11 @@ const checkUserRoles=(req , res,next)=>{
 
 }
 
+// Passport Config
+// ======================
+const passportSetup = require('./passport-config');
+passportSetup(passport, connection);
+
 
 
 // === ROUTES ===
@@ -82,14 +87,11 @@ app.get('/', (req, res) => {
 
     res.render('logins', {success:req.flash('success'), errors: req.flash('error')}); // views/logins.ejs
 });
-app.post("/login", (req , res)=>{
 
 
-})
-
-// app.get('/', (req, res) => {
-//     res.render('home', { user: req.session.user, messages: req.flash('success')});
-// });
+app.get('/', (req, res) => {
+    res.render('home', { user: req.session.user, messages: req.flash('success')});
+});
 
 app.get('/login', authenticationsUser , checkUserRoles, (req, res) => {
     res.render('login', { 
@@ -136,42 +138,6 @@ if (err) {
 }
 res.render('dashboard', { entries: results, search: search });
 });
-});
-
-app.get('/editCCA/:id', (req, res) => {
-    const ccaId = req.params.id;
-    connection.query('SELECT * FROM cca_entries WHERE id = ?', [ccaId], (err, result) => {
-        if (err) {
-            return res.status(500).send("Error loading entry");
-        }
-        res.render('editCCA', { entry: result[0] });
-    });
-});
-
-app.post('/editCCA/:id', upload.single('file'), (req, res) => {
-    const ccaId = req.params.id;
-    const { title, date, role, hours, description, category, feedback } = req.body;
-    const file = req.file ? req.file.filename : null;
-
-    // Build SQL dynamically
-    let sql = `UPDATE cca_entries SET title = ?, date = ?, role = ?, hours = ?, category = ?, description = ?, feedback = ?`;
-    const values = [title, date, role, hours, category, description, feedback];
-
-    if (file) {
-        sql += `, proof_file = ?`;
-        values.push(file);
-    }
-
-    sql += ` WHERE id = ?`;
-    values.push(ccaId);
-
-    connection.query(sql, values, (error, results) => {
-        if (error) {
-            console.error('❌ Error updating CCA entry:', error.message);
-            return res.status(500).send('Error updating CCA entry');
-        }
-        res.redirect('/dashboard');
-    });
 });
 
 
