@@ -9,8 +9,9 @@ const app = express();
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'Group5@123?',
-    database: 'igconnect',
+    password: 'Group5@123?', 
+    database: 'igconnect', 
+    port: 3306
 });
 
 connection.connect((err) => {
@@ -18,10 +19,10 @@ connection.connect((err) => {
         console.error('Error connecting to MySQL:', err);
         return;
     }
-    console.log('Connected to MySQL database');
+    console.log('Connected to MySQL database: igconnect');
 });
 
-// Set up multer for file uploads
+// Set up multer for file uploads (retained, but not actively used by IG Roles/Members routes)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/images'); // Directory to save uploaded files
@@ -47,7 +48,7 @@ app.use(express.json());
 
 // Session Middleware
 app.use(session({
-    secret: 'secret',
+    secret: 'secret', // CHANGE THIS TO A STRONG, UNIQUE SECRET IN PRODUCTION
     resave: false,
     saveUninitialized: true,
     // Session expires after 1 week of inactivity
@@ -56,46 +57,114 @@ app.use(session({
 
 app.use(flash());
 
-// Middleware to check if user is logged in
+// *************************************************************************
+// TEMPORARY: Simulate a logged-in USER (student) for direct feature testing
+// REMOVE OR COMMENT OUT THIS BLOCK FOR PRODUCTION WITH AUTHENTICATION
+app.use((req, res, next) => {
+    if (!req.session.user) {
+        req.session.user = {
+            id: 100, // Dummy ID for a student
+            username: 'TestStudent',
+            email: 'student@example.com',
+            role: 'user' // <<<<<< IMPORTANT: Set to 'user' for student role
+        };
+    }
+    next();
+});
+// *************************************************************************
+
+// Middleware to check if user is logged in (NOW ACTIVE)
 const checkAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
     } else {
         req.flash('error', 'Please log in to view this resource');
-        res.redirect('/login'); 
+        res.redirect('/login'); // Redirect to login if not authenticated
     }
 };
 
-// Middleware to check if user is admin
+// Middleware to check if user is admin (NOW ACTIVE)
 const checkAdmin = (req, res, next) => {
     if (req.session.user && req.session.user.role === 'admin') {
         return next();
     } else {
-        req.flash('error', 'Access denied');
-        res.redirect('/'); 
+        req.flash('error', 'Access denied. You must be an administrator.');
+        res.redirect('/'); // Redirect to home or another appropriate page
     }
 };
 
+// Middleware for form validation (for user registration) (RETAINED, BUT NOT USED IF REGISTER ROUTE IS COMMENTED)
+const validateRegistration = (req, res, next) => {
+    const { username, email, password, address, contact, role } = req.body;
+
+    if (!username || !email || !password || !address || !contact || !role) {
+        req.flash('error', 'All fields are required.');
+        req.flash('formData', req.body);
+        return res.redirect('/register');
+    }
+    
+    if (password.length < 6) {
+        req.flash('error', 'Password should be at least 6 characters long.');
+        req.flash('formData', req.body);
+        return res.redirect('/register');
+    }
+    next();
+};
+
+// --- User Authentication Routes (Still commented out for direct access, but logic is active) ---
+app.get('/', (req, res) => {
+    // For direct testing, we redirect directly to members list for user view
+    res.redirect('/members'); 
+    // Original line (uncomment for full auth):
+    // res.render('index', { 
+    //     user: req.session.user, 
+    //     messages: req.flash('success'), 
+    //     errors: req.flash('error') 
+    // });
+});
+
+// login/register/logout routes remain commented out for this specific testing scenario
+// app.get('/register', ...);
+// app.post('/register', ...);
+// app.get('/login', ...);
+// app.post('/login', ...);
+// app.get('/logout', ...);
+
+
 // --- IG ROLES ROUTES ---
-// View all IG roles
+// View all IG roles (User role can view)
 app.get('/ig_roles', checkAuthenticated, (req, res) => {
     connection.query('SELECT * FROM ig_roles', (error, results) => {
         if (error) {
             console.error('Error fetching IG roles:', error);
-            return res.status(500).send('Error fetching IG roles');
+            req.flash('error', 'Error fetching IG roles: ' + error.message);
+            return res.redirect('/');
         }
-        res.render('ig_roles_list', { igRoles: results, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
+        res.render('ig_roles_list', { 
+            igRoles: results, 
+            user: req.session.user, 
+            messages: req.flash('success'), 
+            errors: req.flash('error') 
+        });
     });
 });
 
-// Add new IG role form
+// Add new IG role form (Admin only - protected by checkAdmin)
 app.get('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => {
-    res.render('addIgRole', { user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
+    res.render('addIgRole', { 
+        user: req.session.user, 
+        messages: req.flash('success'), 
+        errors: req.flash('error') 
+    });
 });
 
-// Add new IG role
+// Add new IG role (Admin only - protected by checkAdmin)
 app.post('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => {
     const { title, description } = req.body;
+    if (!title) {
+        req.flash('error', 'Title is required for IG Role.');
+        return res.redirect('/addIgRole');
+    }
     const sql = 'INSERT INTO ig_roles (title, description) VALUES (?, ?)';
     connection.query(sql, [title, description], (error, results) => {
         if (error) {
@@ -104,33 +173,45 @@ app.post('/addIgRole', checkAuthenticated, checkAdmin, (req, res) => {
                 req.flash('error', 'Role with this title already exists.');
                 return res.redirect('/addIgRole');
             }
-            return res.status(500).send('Error adding IG role');
+            req.flash('error', 'Error adding IG role: ' + error.message);
+            return res.redirect('/ig_roles');
         }
         req.flash('success', 'IG Role added successfully!');
         res.redirect('/ig_roles');
     });
 });
 
-// Get data for updating an IG role
+// Get data for updating an IG role (Admin only - protected by checkAdmin)
 app.get('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const roleId = req.params.id;
     connection.query('SELECT * FROM ig_roles WHERE id = ?', [roleId], (error, results) => {
         if (error) {
             console.error('Error fetching IG role for update:', error);
-            return res.status(500).send('Error fetching IG role');
+            req.flash('error', 'Error fetching IG role: ' + error.message);
+            return res.redirect('/ig_roles');
         }
         if (results.length > 0) {
-            res.render('updateIgRole', { igRole: results[0], user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
+            res.render('updateIgRole', { 
+                igRole: results[0], 
+                user: req.session.user, 
+                messages: req.flash('success'), 
+                errors: req.flash('error') 
+            });
         } else {
-            res.status(404).send('IG Role not found');
+            req.flash('error', 'IG Role not found.');
+            res.redirect('/ig_roles');
         }
     });
 });
 
-// Update IG role
+// Update IG role (Admin only - protected by checkAdmin)
 app.post('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const roleId = req.params.id;
     const { title, description } = req.body;
+    if (!title) {
+        req.flash('error', 'Title is required for IG Role update.');
+        return res.redirect(`/updateIgRole/${roleId}`);
+    }
     const sql = 'UPDATE ig_roles SET title = ?, description = ? WHERE id = ?';
     connection.query(sql, [title, description, roleId], (error, results) => {
         if (error) {
@@ -139,21 +220,27 @@ app.post('/updateIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
                 req.flash('error', 'Role with this title already exists.');
                 return res.redirect(`/updateIgRole/${roleId}`);
             }
-            return res.status(500).send('Error updating IG role');
+            req.flash('error', 'Error updating IG role: ' + error.message);
+            return res.redirect('/ig_roles');
         }
-        req.flash('success', 'IG Role updated successfully!');
+        if (results.affectedRows === 0) {
+            req.flash('error', 'IG Role not found or no changes made.');
+        } else {
+            req.flash('success', 'IG Role updated successfully!');
+        }
         res.redirect('/ig_roles');
     });
 });
 
-// Delete IG role
+// Delete IG role (Admin only - protected by checkAdmin)
 app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const roleId = req.params.id;
     // First, check if any members are associated with this role
     connection.query('SELECT COUNT(*) AS count FROM members WHERE role_id = ?', [roleId], (error, results) => {
         if (error) {
             console.error('Error checking members for role deletion:', error);
-            return res.status(500).send('Error checking members');
+            req.flash('error', 'Error checking members for role deletion: ' + error.message);
+            return res.redirect('/ig_roles');
         }
         if (results[0].count > 0) {
             req.flash('error', 'Cannot delete role: Members are currently assigned to this role.');
@@ -164,9 +251,14 @@ app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
         connection.query('DELETE FROM ig_roles WHERE id = ?', [roleId], (deleteError, deleteResults) => {
             if (deleteError) {
                 console.error('Error deleting IG role:', deleteError);
-                return res.status(500).send('Error deleting IG role');
+                req.flash('error', 'Error deleting IG role: ' + deleteError.message);
+                return res.redirect('/ig_roles');
             }
-            req.flash('success', 'IG Role deleted successfully!');
+            if (deleteResults.affectedRows === 0) {
+                req.flash('error', 'IG Role not found for deletion.');
+            } else {
+                req.flash('success', 'IG Role deleted successfully!');
+            }
             res.redirect('/ig_roles');
         });
     });
@@ -174,7 +266,7 @@ app.get('/deleteIgRole/:id', checkAuthenticated, checkAdmin, (req, res) => {
 
 
 // --- IG MEMBERS ROUTES ---
-// View all members
+// View all members (User role can view)
 app.get('/members', checkAuthenticated, (req, res) => {
     const sql = `
         SELECT m.id, m.student_id, m.ig_id, ir.title AS role_name, m.joined_date
@@ -184,39 +276,57 @@ app.get('/members', checkAuthenticated, (req, res) => {
     connection.query(sql, (error, results) => {
         if (error) {
             console.error('Error fetching members:', error);
-            return res.status(500).send('Error fetching members');
+            req.flash('error', 'Error fetching members: ' + error.message);
+            return res.redirect('/');
         }
-        res.render('members_list', { members: results, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
+        res.render('members_list', { 
+            members: results, 
+            user: req.session.user, 
+            searchPerformed: false, 
+            messages: req.flash('success'), 
+            errors: req.flash('error') 
+        });
     });
 });
 
-// Add new member form
+// Add new member form (Admin only - protected by checkAdmin)
 app.get('/addMember', checkAuthenticated, checkAdmin, (req, res) => {
     // Fetch roles to populate a dropdown
     connection.query('SELECT id, title FROM ig_roles', (error, roles) => {
         if (error) {
             console.error('Error fetching roles for add member form:', error);
-            return res.status(500).send('Error fetching roles');
+            req.flash('error', 'Error fetching roles for form: ' + error.message);
+            return res.redirect('/members');
         }
-        res.render('addMember', { roles: roles, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
+        res.render('addMember', { 
+            roles: roles, 
+            user: req.session.user, 
+            messages: req.flash('success'), 
+            errors: req.flash('error') 
+        });
     });
 });
 
-// Add new member
+// Add new member (Admin only - protected by checkAdmin)
 app.post('/addMember', checkAuthenticated, checkAdmin, (req, res) => {
     const { student_id, ig_id, role_id, joined_date } = req.body;
+    if (!student_id || !ig_id || !role_id || !joined_date) {
+        req.flash('error', 'All fields are required for adding a member.');
+        return res.redirect('/addMember');
+    }
     const sql = 'INSERT INTO members (student_id, ig_id, role_id, joined_date) VALUES (?, ?, ?, ?)';
     connection.query(sql, [student_id, ig_id, role_id, joined_date], (error, results) => {
         if (error) {
             console.error('Error adding member:', error);
-            return res.status(500).send('Error adding member');
+            req.flash('error', 'Error adding member: ' + error.message);
+            return res.redirect('/addMember');
         }
         req.flash('success', 'Member added successfully!');
         res.redirect('/members');
     });
 });
 
-// Get data for updating a member's role
+// Get data for updating a member's role (Admin only - protected by checkAdmin)
 app.get('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const memberId = req.params.id;
     const sqlMember = `
@@ -228,57 +338,74 @@ app.get('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
     connection.query(sqlMember, [memberId], (error, memberResults) => {
         if (error) {
             console.error('Error fetching member for update:', error);
-            return res.status(500).send('Error fetching member');
+            req.flash('error', 'Error fetching member: ' + error.message);
+            return res.redirect('/members');
         }
         if (memberResults.length === 0) {
-            return res.status(404).send('Member not found');
+            req.flash('error', 'Member not found.');
+            return res.redirect('/members');
         }
 
         connection.query('SELECT id, title FROM ig_roles', (roleError, roleResults) => {
             if (roleError) {
-            console.error('Error fetching roles for update member form:', roleError);
-                return res.status(500).send('Error fetching roles');
+                console.error('Error fetching roles for update member form:', roleError);
+                req.flash('error', 'Error fetching roles for form: ' + roleError.message);
+                return res.redirect('/members');
             }
-            res.render('updateMember', { member: memberResults[0], roles: roleResults, user: req.session.user, messages: req.flash('success'), errors: req.flash('error') });
+            res.render('updateMember', { 
+                member: memberResults[0], 
+                roles: roleResults, 
+                user: req.session.user, 
+                messages: req.flash('success'), 
+                errors: req.flash('error') 
+            });
         });
     });
 });
 
-// Update member's role
+// Update member's role (Admin only - protected by checkAdmin)
 app.post('/updateMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const memberId = req.params.id;
     const { student_id, ig_id, role_id, joined_date } = req.body;
+    if (!student_id || !ig_id || !role_id || !joined_date) {
+        req.flash('error', 'All fields are required for updating a member.');
+        return res.redirect(`/updateMember/${memberId}`);
+    }
     const sql = 'UPDATE members SET student_id = ?, ig_id = ?, role_id = ?, joined_date = ? WHERE id = ?';
     connection.query(sql, [student_id, ig_id, role_id, joined_date, memberId], (error, results) => {
         if (error) {
             console.error('Error updating member:', error);
-            return res.status(500).send('Error updating member');
+            req.flash('error', 'Error updating member: ' + error.message);
+            return res.redirect(`/updateMember/${memberId}`);
         }
         if (results.affectedRows === 0) {
-            return res.status(404).send('Member not found');
+            req.flash('error', 'Member not found or no changes made.');
+        } else {
+            req.flash('success', 'Member updated successfully!');
         }
-        req.flash('success', 'Member updated successfully!');
         res.redirect('/members');
     });
 });
 
-// Remove member
+// Remove member (Admin only - protected by checkAdmin)
 app.get('/deleteMember/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const memberId = req.params.id;
     connection.query('DELETE FROM members WHERE id = ?', [memberId], (error, results) => {
         if (error) {
             console.error('Error deleting member:', error);
-            return res.status(500).send('Error deleting member');
+            req.flash('error', 'Error deleting member: ' + error.message);
+            return res.redirect('/members');
         }
         if (results.affectedRows === 0) {
-            return res.status(404).send('Member not found');
+            req.flash('error', 'Member not found for deletion.');
+        } else {
+            req.flash('success', 'Member removed successfully!');
         }
-        req.flash('success', 'Member removed successfully!');
         res.redirect('/members');
     });
 });
 
-// Search members by IG and student name
+// Search members by IG and student name (User role can search)
 app.get('/searchMembers', checkAuthenticated, (req, res) => {
     const { ig_id, student_name } = req.query;
     let sql = `
@@ -290,8 +417,8 @@ app.get('/searchMembers', checkAuthenticated, (req, res) => {
     const queryParams = [];
 
     if (ig_id) {
-        sql += ' AND m.ig_id = ?';
-        queryParams.push(ig_id);
+        sql += ' AND m.ig_id LIKE ?';
+        queryParams.push(`%${ig_id}%`);
     }
     if (student_name) {
         sql += ' AND m.student_id LIKE ?';
@@ -301,9 +428,17 @@ app.get('/searchMembers', checkAuthenticated, (req, res) => {
     connection.query(sql, queryParams, (error, results) => {
         if (error) {
             console.error('Error searching members:', error);
-            return res.status(500).send('Error searching members');
+            req.flash('error', 'Error searching members: ' + error.message);
+            return res.redirect('/members');
         }
-        res.render('members_list', { members: results, user: req.session.user, searchPerformed: true, messages: req.flash('success'), errors: req.flash('error') });
+        res.render('members_list', { 
+            members: results, 
+            user: req.session.user, 
+            searchPerformed: true, 
+            req: req, 
+            messages: req.flash('success'), 
+            errors: req.flash('error') 
+        });
     });
 });
 
