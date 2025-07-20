@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Update IG Role - IG Connect</title>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">IG Connect</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <% if (user) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/members">Members</a>
+                        </li>
+                        <% if (user.role === 'admin') { %>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/ig_roles">IG Roles</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/addMember">Add New Member</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/addIgRole">Add New IG Role</a>
+                            </li>
+                        <% } %>
+                        <li class="nav-item">
+                            <span class="nav-link text-white">Welcome, <%= user.username %>!</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/logout">Logout</a>
+                        </li>
+                    <% } else { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/register">Register</a>
+                        </li>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">Update IG Role</h2>
+        
+        <% if (messages && messages.length > 0) { %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <%= messages %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+        <% if (errors && errors.length > 0) { %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= errors %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <% if (igRole) { %>
+            <form action="/updateIgRole/<%= igRole.id %>" method="POST" class="mx-auto" style="max-width: 500px;">
+                
+                <div class="mb-3">
+                    <label for="title" class="form-label">Role Title</label>
+                    <input type="text" class="form-control" id="title" name="title" value="<%= igRole.title %>" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4"><%= igRole.description %></textarea>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Update Role</button>
+                    <a href="/ig_roles" class="btn btn-secondary">Back to IG Roles List</a>
+                </div>
+            </form>
+        <% } else { %>
+            <p class="text-center">No IG role found for update.</p>
+        <% } %>
+    </div>
+</body>
+</html>
