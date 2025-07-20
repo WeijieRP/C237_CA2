@@ -1,17 +1,17 @@
 const express = require('express');
-const multer = require("multer");
-const mysql = require("mysql2");
+const multer = require('multer');
+const mysql = require('mysql2');
 const app = express();
 
-const session = require("express-session");
-const flash = require("connect-flash");
+const session = require('express-session');
+const flash = require('connect-flash');
 
 const path = require('path');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/uploads/');
-    },
+    }, 
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, 'proof-' + uniqueSuffix + path.extname(file.originalname));
@@ -23,7 +23,7 @@ app.use(session({
     secret: 'Secret',
     resave:false,
     saveUninitialized: true,
-    cookie:{maxAge:1000*24*60*7}
+    cookie:{maxAge:1000*60*60*24*7}
 }))
 app.use(flash());   
 app.use(express.Router())
@@ -31,7 +31,7 @@ app.use(express.Router())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
-app.use(express.static('public')); // ✅ to serve Lottie and other assets
+app.use('/public', express.static(path.join(__dirname, 'public'))); 
 
 // MySQL connection (Uncomment and configure when ready)
 const connection = mysql.createConnection({
@@ -51,8 +51,8 @@ connection.connect((err) => {
 });
 
 
-//authutications
-const authuticationsUser=(req , res , next)=>{
+//authentications
+const authenticationsUser=(req , res , next)=>{
     if(req.session.user){
         next();
     }else{
@@ -91,7 +91,7 @@ app.post("/login", (req , res)=>{
 //     res.render('home', { user: req.session.user, messages: req.flash('success')});
 // });
 
-app.get('/login', authuticationsUser , checkUserRoles, (req, res) => {
+app.get('/login', authenticateUser , checkUserRoles, (req, res) => {
     res.render('login', { 
         messages: req.flash('success'), //retrieve success messages
         errors: req.flash('error'), //retrieve error messages
