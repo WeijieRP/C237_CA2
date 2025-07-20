@@ -1,0 +1,19 @@
+<script>
+  const loader = lottie.loadAnimation({
+    container: document.getElementById('lottie-loader'),
+    renderer: 'svg',
+    loop: false,
+    autoplay: true,
+    path: 'https://lottie.host/8315ccce-1767-451c-9623-3f6e7726bb46/g1Vcqs68mr.json'
+  });
+
+  loader.addEventListener('complete', () => {
+    document.getElementById('loader-screen').style.display = 'none';
+    document.getElementById('main-screen').classList.add('show');
+  });
+
+  setTimeout(() => {
+    document.getElementById('loader-screen').style.display = 'none';
+    document.getElementById('main-screen').classList.add('show');
+  }, 8000);
+</script>
