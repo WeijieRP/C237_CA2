@@ -1,0 +1,50 @@
+<%- include('partials/admin-header', { title: 'Manage Interest Groups' }) %>
+
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Manage Interest Groups</h2>
+    <a href="/admin/interest-groups/new" class="btn btn-warning">
+      <i class="fas fa-plus-circle me-1"></i> Add New IG
+    </a>
+  </div>
+
+  <% if (igs.length === 0) { %>
+    <div class="alert alert-info text-center">No Interest Groups found.</div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Date Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% igs.forEach(ig => { %>
+            <tr>
+              <td><%= ig.name %></td>
+              <td><%= ig.category %></td>
+              <td><%= ig.description %></td>
+              <td><%= new Date(ig.created_at).toLocaleDateString() %></td>
+              <td>
+                <a href="/admin/interest-groups/edit/<%= ig.id %>" class="btn btn-sm btn-primary me-2">
+                  <i class="fas fa-edit"></i> Edit
+                </a>
+                <form action="/admin/interest-groups/delete/<%= ig.id %>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this IG?');">
+                  <button type="submit" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/admin-footer') %>
