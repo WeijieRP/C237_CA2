@@ -1,11 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IGConnect | Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fefefe;
+    }
+
+    .hero {
+      background: linear-gradient(to right, #fff8f0, #fff);
+      padding: 80px 0;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 700;
+    }
+
+    .hero p {
+      font-size: 18px;
+      margin: 20px 0;
+    }
+
+    .btn-orange {
+      background-color: #ff9800;
+      color: white;
+      font-weight: bold;
+    }
+
+    .btn-orange:hover {
+      background-color: #fb8c00;
+    }
+
+    .stats-box {
+      background-color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 30px;
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    .program-card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .program-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .navbar-brand {
+      font-weight: bold;
+      color: #ff9800;
+    }
+
+    .nav-link.active {
+      color: #ff9800 !important;
+    }
+
+    footer {
+      background: #f3f3f3;
+      padding: 30px;
+      text-align: center;
+      color: #777;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>helloworld <%= user%></h1>
+
+<!-- ✅ Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <div class="container">
+    <a class="navbar-brand" href="/">IGConnect</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a href="/" class="nav-link active">Home</a></li>
+        <li class="nav-item"><a href="/interest-groups" class="nav-link">Interest Groups</a></li>
+        <li class="nav-item"><a href="/events" class="nav-link">Events</a></li>
+        <li class="nav-item"><a href="/gallery" class="nav-link">Gallery</a></li>
+        <li class="nav-item"><a href="/schools" class="nav-link">Schools</a></li>
+        <li class="nav-item"><a href="/about" class="nav-link">About</a></li>
+        <li class="nav-item"><a href="/contact" class="nav-link">Contact</a></li>
+        <li class="nav-item"><a href="/profile" class="nav-link"><i class="fas fa-user"></i> Profile</a></li>
+        <li class="nav-item"><a href="/logout" class="nav-link text-danger">Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ✅ Hero Section -->
+<section class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <h1>Empowering Through Interest Groups</h1>
+        <p>IGConnect helps students explore their passions, participate in events, and stay connected with school CCAs.</p>
+        <a href="/interest-groups" class="btn btn-orange btn-lg">Explore Interest Groups</a>
+      </div>
+      <div class="col-md-6 text-center">
+        <img src="/images/igconnect-placeholder.png" class="img-fluid" alt="Students playing" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ✅ Stats Section -->
+<section class="container text-center my-5">
+  <div class="row">
+    <div class="col-md-4">
+      <div class="stats-box">
+        <h3>50+</h3>
+        <p>Active Interest Groups</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stats-box">
+        <h3>30+</h3>
+        <p>Upcoming Events</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="stats-box">
+        <h3>20+</h3>
+        <p>Participating Schools</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ✅ Our Programs Section -->
+<section class="container my-5">
+  <h2 class="text-center mb-4">Featured IG Programs</h2>
+  <div class="row">
+    <div class="col-md-4 mb-4">
+      <div class="card program-card p-3">
+        <h5 class="fw-bold">Dance Club</h5>
+        <p>Join rhythmic performances and workshops.</p>
+        <span class="badge bg-warning text-dark">CCA</span>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div class="card program-card p-3">
+        <h5 class="fw-bold">Tech Society</h5>
+        <p>Explore coding, AI, and tech competitions.</p>
+        <span class="badge bg-warning text-dark">Tech</span>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div class="card program-card p-3">
+        <h5 class="fw-bold">Photography Club</h5>
+        <p>Capture campus life and events through the lens.</p>
+        <span class="badge bg-warning text-dark">Arts</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ✅ Footer -->
+<footer>
+  <p>&copy; 2025 IGConnect · All rights reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

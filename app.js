@@ -48,6 +48,9 @@ const authUser = (req, res, next) => {
   req.flash("errorMsg", "Please log in to access this page.");
   return res.redirect('/login');
 };
+app.get('/home', (req, res) => {
+  res.render('studentdashboard');
+});
 
 // Home Redirect
 app.get('/', (req, res) => res.redirect('/login'));
