@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Categories</title>
+</head>
+<body>
+    <h1>Interest Group Categories</h1>
+
+    <% if (success) { %><p style="color: green;"><%= success %></p><% } %>
+    <% if (error) { %><p style="color: red;"><%= error %></p><% } %>
+
+    <a href="/addCategory">Add Category</a>
+    <ul>
+        <% categories.forEach(category => { %>
+            <li>
+                <strong><%= category.name %></strong> - <%= category.description %><br>
+                <a href="/editCategory/<%= category.id %>">Edit</a> |
+                <a href="/deleteCategory/<%= category.id %>" onclick="return confirm('Confirm delete?')">Delete</a>
+            </li>
+        <% }) %>
+    </ul>
+</body>
+</html>
