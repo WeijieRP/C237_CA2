@@ -55,7 +55,85 @@ const authAdmin = (req, res, next) => {
   if (req.session.user && req.session.user.roles === 'admin') return next();
   req.flash("errorMsg", "Access denied. Admins only.");
   return res.redirect('/login');
+
 };
+
+
+// app.get("/admin/events", authAdmin, (req, res) => {
+//   const sqlEvents = `
+//     SELECT e.id, e.name, e.date, e.description, ig.name AS ig_name
+//     FROM events e
+//     INNER JOIN interest_groups ig ON e.ig_id = ig.id
+//     ORDER BY e.date ASC`;
+
+
+//   const sqlIGs = `SELECT id, name FROM interest_groups`;
+
+//   connection.query(sqlEvents, (errEvents, eventResults) => {
+//     if (errEvents) {
+//       console.error("❌ Error fetching events:", errEvents);
+//       req.flash("errorMsg", "Failed to retrieve events.");
+//       return res.render("ManageAdminEvents", {
+//         eventList: [],
+//         igList: [],
+//         successMsg: req.flash("successMsg"),
+//         errorMsg: req.flash("errorMsg")
+//       });
+//     }
+
+//     connection.query(sqlIGs, (errIGs, igResults) => {
+//       if (errIGs) {
+//         console.error("❌ Error fetching IGs:", errIGs);
+//         req.flash("errorMsg", "Failed to retrieve IG list.");
+//         return res.render("ManageAdminEvents", {
+//           eventList: eventResults,
+//           igList: [],
+//           successMsg: req.flash("successMsg"),
+//           errorMsg: req.flash("errorMsg")
+//         });
+//       }
+
+//       res.render("AddAdminEvents", {
+//         eventList: eventResults,
+//         igList: igResults,
+//         successMsg: req.flash("successMsg"),
+//         errorMsg: req.flash("errorMsg")
+//       });
+//     });
+//   });
+// });
+
+app.get("/admin/events", (req, res) => {
+  const sql = `SELECT events.*, interest_groups.name 
+               FROM events 
+               INNER JOIN interest_groups ON events.ig_id = interest_groups.id`;
+  connection.query(sql, (err, results) => {
+    if (err) throw err;
+    res.render("ManageEventsAdmin", { eventList: results });
+  });
+});
+app.get('/admin/gallery', async (req, res) => {
+  try {
+    const [gallery] = await connection.promise().query(`
+      SELECT g.id, g.title, g.media_url, g.created_at, s.name AS student_name, ig.name AS ig_name
+      FROM galleries g
+      JOIN students s ON g.student_id = s.id
+      JOIN interest_groups ig ON g.ig_id = ig.id
+      ORDER BY g.created_at DESC
+    `);
+
+    res.render('AdminManageGallery', {
+      galleryList: gallery,
+      message: req.flash('message'),
+      successMsg: req.flash('successMsg'),
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash('message', 'Failed to fetch gallery items.');
+    res.redirect('/admindashboard');
+  }
+});
+
 
 // ---------- Logout ----------
 app.get("/logout", (req, res) => {
@@ -65,13 +143,83 @@ app.get("/logout", (req, res) => {
         console.error('❌ Session destruction error:', err);
         return res.redirect('/home');
       }
+      res.redirect('/login');      
       req.flash("successMsg", "You have been logged out successfully.");
-      return res.redirect('/login');
+
     });
   } else {
     return res.redirect('/login');
   }
 });
+
+// GET Add Gallery page
+app.get('/admin/gallery/add', async (req, res) => {
+  const [igs] = await connection.promise().query('SELECT * FROM interest_groups');
+  const [students] = await connection.promise().query('SELECT * FROM students');
+  res.render('AdminAddGallery', {
+    igs,
+    students,
+    message: req.flash('message'),
+    successMsg: req.flash('successMsg')
+  });
+});
+// 🧠 Route: GET /admin/students
+app.get("/admin/students", (req, res) => {
+  const sql = "SELECT * FROM students ORDER BY name ASC";
+  connection.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching students:", err);
+      req.flash("message", "Failed to load student list.");
+      return res.render("admin/manageStudents", { studentList: [], message: req.flash("message"), successMsg: [] });
+    }
+
+    res.render("AdminManageStudent", {
+      studentList: results,
+      message: req.flash("message"),
+      successMsg: req.flash("successMsg")
+    });
+  });
+});
+
+// 🔴 Optional: POST /admin/students/delete/:id
+app.post("/admin/students/delete/:id", (req, res) => {
+  const studentId = req.params.id;
+  const sql = "DELETE FROM students WHERE id = ?";
+  connection.query(sql, [studentId], (err, result) => {
+    if (err) {
+      req.flash("message", "Error deleting student.");
+    } else {
+      req.flash("successMsg", "Student deleted successfully.");
+    }
+    res.redirect("/admin/students");
+  });
+});
+
+// POST Add Gallery logic
+app.post('/admin/gallery/add', async (req, res) => {
+  const { title, media_url, student_id, ig_id } = req.body;
+  try {
+    const sql = `
+      INSERT INTO galleries (title, media_url, student_id, ig_id, created_at)
+      VALUES (?, ?, ?, ?, NOW())
+    `;
+    await connection.promise().query(sql, [title, media_url, student_id, ig_id]);
+    req.flash('successMsg', 'Gallery image uploaded successfully.');
+    res.redirect('/admin/gallery');
+  } catch (err) {
+    console.error(err);
+    req.flash('message', 'Upload failed.');
+    res.redirect('/admin/gallery/add');
+  }
+});
+app.get('/admin/gallery/add', (req, res) => {
+  const userId = req.session.user?.id || 1; // fallback for now
+  connection.query('SELECT id, name FROM interest_groups', (err, igs) => {
+    if (err) throw err;
+    res.render('AdminAddGallery', { igs, userId });
+  });
+});
+
 
 // ---------- Home ----------
 app.get('/', (req, res) => res.redirect('/login'));
@@ -216,8 +364,14 @@ app.post('/reset-password', (req, res) => {
     });
   });
 });
+app.get("/admin/interest-groups/add", authAdmin, (req, res) => {
+  res.render("AddIGAdmin", {
+    successMsg: req.flash("successMsg"),
+    errorMsg: req.flash("errorMsg")
+  });
+})
 app.get("/ManageIG" , (req , res)=>{
-  sql = "SELECT * FROM interest_groups";
+  sql = "SELECT * FROM interest_groups I INNER JOIN students S ON S.id =I.id  ";
   connection.query(sql, (err, results) => {
     if (err) {  
       throw new Error("Failed to fetch IGs.");
@@ -225,6 +379,7 @@ app.get("/ManageIG" , (req , res)=>{
       if(results.length===0){
         req.flash("message", "No Interest Groups found.");
       }
+      
       return res.render("ManagerIG", { igList: results, message: req.flash("message"), successMsg: req.flash("successMsg") });
 
     }
