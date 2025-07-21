@@ -59,10 +59,11 @@ app.get('/galleries',  (req, res) => {
             req.flash('error', 'Error fetching gallery');
             return res.redirect('/');
         }
-        res.render('events', { galleries: results });
+        res.render('galleries', { galleries: results });
     });
 }); 
 
+// View galleries
 app.get('/galleries/:id', (req, res) => {
   // Extract the gallery ID from the request parameters
   const galleryId = req.params.id;
@@ -82,14 +83,70 @@ app.get('/galleries/:id', (req, res) => {
   });
 });
 
+// Add image
+app.post('/addImage', upload.single('image'),  (req, res) => {
+    // Extract product data from the request body
+    const { ig_id, caption, upload_date} = req.body;
+    let media_url;
+    if (req.file) {
+        media_url = req.file.filename; // Save only the filename
+    } else {
+        media_url = null;
+    }
 
+    const sql = 'INSERT INTO galleries (productName, quantity, price, image) VALUES (?, ?, ?, ?)';
+    // Insert the new product into the database
+    connection.query(sql , [ig_id, caption, upload_date, media_url], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error adding product:", error);
+            res.status(500).send('Error adding product');
+        } else {
+            // Send a success response
+            res.redirect('/galleries');
+        }
+    });
+});
 
+// Update Galleries
+app.post('/updateGalleries/:id', upload.single('image'), (req, res) => {
+    const id = req.params.id;
+    // Extract product data from the request body
+    const { ig_id, caption, upload_date } = req.body;
+    let media_url  = req.body.currentImage; //retrieve current image filename
+    if (req.file) { //if new image is uploaded
+        media_url = req.file.filename; // set image to be new image filename
+    } 
 
+    const sql = 'UPDATE galleries SET ig_id = ? , caption = ?, upload_date = ?, media_url =? WHERE productId = ?';
+    // Insert the new product into the database
+    connection.query(sql, [ig_id, caption, upload_date, media_url, id], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error updating product:", error);
+            res.status(500).send('Error updating product');
+        } else {
+            // Send a success response
+            res.redirect('/inventory');
+        }
+    });
+});
 
+// Delete
+app.get('/deleteImage/:id', (req, res) => {
+    const id = req.params.id;
 
-
-
-
+    connection.query('DELETE FROM galleries WHERE id = ?', [id], (error, results) => {
+        if (error) {
+            // Handle any error that occurs during the database operation
+            console.error("Error deleting product:", error);
+            res.status(500).send('Error deleting product');
+        } else {
+            // Send a success response
+            res.redirect('/galleries');
+        }
+    });
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
