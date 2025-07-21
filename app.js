@@ -72,10 +72,6 @@ const checkUserRoles=(req , res,next)=>{
 
 }
 
-// Passport Config
-// ======================
-const passportSetup = require('./passport-config');
-passportSetup(passport, connection);
 
 
 
