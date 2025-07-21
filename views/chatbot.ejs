@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Button</title>
+    <style>
+        /* Style for the chatbot button */
+.chat-button {
+    background-color: #007bff; /* Blue color */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 16px;
+    cursor: pointer;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.chat-button:hover {
+    background-color: #0056b3;
+}
+
+/* Style for the chatbot popup */
+.chat-popup {
+    display: none; /* Initially hidden */
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    width: 300px;
+    height: 350px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+.chat-box {
+    max-height: 270px;
+    overflow-y: auto;
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.message {
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.bot {
+    background-color: #e8e8e8;
+    align-self: flex-start;
+}
+
+.user {
+    background-color: #4caf50;
+    color: white;
+    align-self: flex-end;
+}
+
+input[type="text"] {
+    width: 80%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    margin: 10px;
+}
+
+button {
+    width: 15%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+    </style>
+
+</head>
+<body>
+
+    <!-- Chatbot Button -->
+    <button class="chat-button" onclick="openChat()">💬 Chat with Me</button>
+
+    <!--hide chatbot-->>
+    <div class="chat-popup" id="chatPopup">
+        <div class="chat-box" id="chat-box">
+            <div class="message bot">Hello! How can I assist you today?</div>
+        </div>
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script >
+        function openChat() {
+    const chatPopup = document.getElementById('chatPopup');
+    chatPopup.style.display = chatPopup.style.display === 'none' || chatPopup.style.display === '' ? 'block' : 'none';
+}
+
+function sendMessage() {
+    let userInput = document.getElementById('user-input').value;
+    if (userInput.trim() !== "") {
+        // Display user's message
+        displayMessage(userInput, 'user');
+
+        // Clear input field
+        document.getElementById('user-input').value = "";
+
+        // Bot response
+        setTimeout(() => {
+            let botResponse = getBotResponse(userInput);
+            displayMessage(botResponse, 'bot');
+        }, 1000);
+    }
+}
+
+function displayMessage(message, sender) {
+    const chatBox = document.getElementById('chat-box');
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message', sender);
+    messageElement.innerText = message;
+    chatBox.appendChild(messageElement);
+
+    // Scroll to the bottom of the chat
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function getBotResponse(userMessage) {
+    
+    const responses = {
+        "hi": "Hello! How can I help you today?",
+        "how are you?": "Welcome to Our page! Feel free to ask any questions!!",
+        "bye": "Have a great day!",
+    };
+
+    
+    return responses[userMessage.toLowerCase()] || "I'm sorry, I don't understand that.";
+}
+
+    </script>
+
+</body>
+</html>

@@ -1,211 +1,228 @@
 const express = require('express');
-const app = express();
-const path = require('path');
 const mysql = require('mysql2');
+const path = require('path');
+const session = require('express-session');
+const flash = require('connect-flash');
 
+const app = express();
+
+// Database Connection
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'Group5@123?',
+    database: 'igconnect'
+});
+
+db.connect((err) => {
+    if (err) throw err;
+    console.log('Connected to MySQL database');
+});
+
+// Middleware Setup
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(session({
+    secret: 'secretkey',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
+}));
+
+app.use(flash());
+
+// Pass flash messages to all views
+app.use((req, res, next) => {
+    res.locals.success = req.flash('success');
+    res.locals.error = req.flash('error');
+    next();
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
-
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'Group5@123?', 
-    database: 'igconnect' 
-});
-
-connection.connect((err) => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
-    }
-    console.log('Connected to MySQL database');
-});
-
-// Route to serve the chatbot page
+// Route: Chatbot Page
 app.get('/chat', (req, res) => {
-    res.render('chatbot'); 
+    res.render('chatbot');
 });
-// View  all interest group
+
+// Route: View all Interest Groups
 app.get('/ig', (req, res) => {
     const sql = 'SELECT * FROM interest_groups';
-    connection.query(sql, (error, results) => {
-        if (error) {
-            console.error('Database query error:', error.message);
-            return res.status(500).send('Error Retrieving Interest Groups');
+    db.query(sql, (err, results) => {
+        if (err) {
+            req.flash('error', 'Error retrieving Interest Groups.');
+            return res.redirect('/');
         }
         res.render('viewIGs', { igs: results });
     });
 });
 
-//add an interest group
+// Route: Render Add Interest Group Form
 app.get('/addIG', (req, res) => {
     const categoriesSql = 'SELECT * FROM ig_categories';
     const schoolsSql = 'SELECT * FROM schools';
 
-    connection.query(categoriesSql, (error, categories) => {
-        if (error) {
-            console.error('Error fetching categories:', error.message);
-            return res.status(500).send('Error fetching categories');
-        }
-        connection.query(schoolsSql, (err, schools) => {
-            if (err) {
-                console.error('Error fetching schools:', err.message);
-                return res.status(500).send('Error fetching schools');
-            }
+    db.query(categoriesSql, (err, categories) => {
+        if (err) return res.status(500).send('Error fetching categories');
+        db.query(schoolsSql, (err2, schools) => {
+            if (err2) return res.status(500).send('Error fetching schools');
             res.render('addIG', { categories, schools });
         });
     });
 });
 
+// Route: Handle Add Interest Group
 app.post('/addIG', (req, res) => {
     const { name, category_id, description, school_id, meeting_schedule } = req.body;
-    const sql = 'INSERT INTO interest_groups(name, category_id, description, school_id, meeting_schedule) VALUES(?, ?, ?, ?, ?)';
-    connection.query(sql, [name, category_id, description, school_id, meeting_schedule], (error, results) => {
-        if (error) {
-            console.error("Error adding IG:", error);
-            res.status(500).send('Error adding IG');
-        } else {
-            res.redirect('/ig');
+    const sql = 'INSERT INTO interest_groups (name, category_id, description, school_id, meeting_schedule) VALUES (?, ?, ?, ?, ?)';
+
+    db.query(sql, [name, category_id, description, school_id, meeting_schedule], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to add Interest Group.');
+            return res.redirect('/ig');
         }
+        req.flash('success', 'Interest Group added successfully!');
+        res.redirect('/ig');
     });
 });
 
-// Edit  an interest group
+// Route: Render Edit Interest Group Form
 app.get('/editIG/:id', (req, res) => {
-    const ig_id = req.params.id;
-    const sql = 'SELECT * FROM interest_groups WHERE ig_id = ?';
-    connection.query(sql, [ig_id], (error, results) => {
-        if (error) {
-            console.error('Error fetching IG:', error.message);
-            return res.status(500).send('Error fetching IG');
+    const id = req.params.id;
+    const sql = 'SELECT * FROM interest_groups WHERE id = ?';
+
+    db.query(sql, [id], (err, results) => {
+        if (err || results.length === 0) {
+            req.flash('error', 'Interest Group not found.');
+            return res.redirect('/ig');
         }
+
         const categoriesSql = 'SELECT * FROM ig_categories';
         const schoolsSql = 'SELECT * FROM schools';
-        connection.query(categoriesSql, (err, categories) => {
-            if (err) {
-                console.error('Error fetching categories:', err.message);
-                return res.status(500).send('Error fetching categories');
-            }
-            connection.query(schoolsSql, (err2, schools) => {
-                if (err2) {
-                    console.error('Error fetching schools:', err2.message);
-                    return res.status(500).send('Error fetching schools');
-                }
+
+        db.query(categoriesSql, (err2, categories) => {
+            if (err2) return res.status(500).send('Error fetching categories');
+            db.query(schoolsSql, (err3, schools) => {
+                if (err3) return res.status(500).send('Error fetching schools');
                 res.render('editIG', { ig: results[0], categories, schools });
             });
         });
     });
 });
 
+// Route: Handle Edit Interest Group
 app.post('/editIG/:id', (req, res) => {
-    const ig_id = req.params.id;
+    const id = req.params.id;
     const { name, category_id, description, school_id, meeting_schedule } = req.body;
-    const sql = 'UPDATE interest_groups SET name = ?, category_id = ?, description = ?, school_id = ?, meeting_schedule = ? WHERE ig_id = ?';
-    connection.query(sql, [name, category_id, description, school_id, meeting_schedule, ig_id], (error, results) => {
-        if (error) {
-            console.error("Error updating IG:", error);
-            res.status(500).send('Error updating IG');
-        } else {
-            res.redirect('/ig');
+
+    const sql = 'UPDATE interest_groups SET name = ?, category_id = ?, description = ?, school_id = ?, meeting_schedule = ? WHERE id = ?';
+    db.query(sql, [name, category_id, description, school_id, meeting_schedule, id], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to update Interest Group.');
+            return res.redirect('/ig');
         }
+        req.flash('success', 'Interest Group updated successfully!');
+        res.redirect('/ig');
     });
 });
 
-// Delete  an interest group
+// Route: Delete Interest Group
 app.get('/deleteIG/:id', (req, res) => {
-    const ig_id = req.params.id;
-    const sql = 'DELETE FROM interest_groups WHERE ig_id = ?';
-    connection.query(sql, [ig_id], (error, results) => {
-        if (error) {
-            console.error("Error deleting IG:", error);
-            res.status(500).send('Error deleting IG');
-        } else {
-            res.redirect('/ig');
+    const id = req.params.id;
+    const sql = 'DELETE FROM interest_groups WHERE id = ?';
+
+    db.query(sql, [id], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to delete Interest Group.');
+            return res.redirect('/ig');
         }
+        req.flash('success', 'Interest Group deleted successfully!');
+        res.redirect('/ig');
     });
 });
 
-// View all IG Category
+// Route: View Categories
 app.get('/categories', (req, res) => {
     const sql = 'SELECT * FROM ig_categories';
-    connection.query(sql, (error, results) => {
-        if (error) {
-            console.error('Database query error:', error.message);
-            return res.status(500).send('Error Retrieving Categories');
+    db.query(sql, (err, results) => {
+        if (err) {
+            req.flash('error', 'Error retrieving categories.');
+            return res.redirect('/');
         }
         res.render('viewCategories', { categories: results });
     });
 });
 
-// Add new IG Category
+// Route: Render Add Category Form
 app.get('/addCategory', (req, res) => {
     res.render('addCategory');
 });
 
+// Route: Handle Add Category
 app.post('/addCategory', (req, res) => {
     const { name, description } = req.body;
-    const sql = 'INSERT INTO ig_categories(name, description) VALUES(?, ?)';
-    connection.query(sql, [name, description], (error, results) => {
-        if (error) {
-            console.error("Error adding category:", error);
-            res.status(500).send('Error adding category');
-        } else {
-            res.redirect('/categories');
+    const sql = 'INSERT INTO ig_categories (name, description) VALUES (?, ?)';
+
+    db.query(sql, [name, description], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to add category.');
+            return res.redirect('/categories');
         }
+        req.flash('success', 'Category added successfully!');
+        res.redirect('/categories');
     });
 });
 
-// Edit IG Category
+// Route: Render Edit Category Form
 app.get('/editCategory/:id', (req, res) => {
-    const category_id = req.params.id;
+    const id = req.params.id;
     const sql = 'SELECT * FROM ig_categories WHERE id = ?';
-    connection.query(sql, [category_id], (error, results) => {
-        if (error) {
-            console.error('Error fetching category:', error.message);
-            return res.status(500).send('Error fetching category');
+
+    db.query(sql, [id], (err, results) => {
+        if (err || results.length === 0) {
+            req.flash('error', 'Category not found.');
+            return res.redirect('/categories');
         }
         res.render('editCategory', { category: results[0] });
     });
 });
 
+// Route: Handle Edit Category
 app.post('/editCategory/:id', (req, res) => {
-    const category_id = req.params.id;
+    const id = req.params.id;
     const { name, description } = req.body;
     const sql = 'UPDATE ig_categories SET name = ?, description = ? WHERE id = ?';
-    connection.query(sql, [name, description, category_id], (error, results) => {
-        if (error) {
-            console.error("Error updating category:", error);
-            res.status(500).send('Error updating category');
-        } else {
-            res.redirect('/categories');
+
+    db.query(sql, [name, description, id], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to update category.');
+            return res.redirect('/categories');
         }
+        req.flash('success', 'Category updated successfully!');
+        res.redirect('/categories');
     });
 });
 
-// Delete IG Category
+// Route: Delete Category
 app.get('/deleteCategory/:id', (req, res) => {
-    const category_id = req.params.id;
+    const id = req.params.id;
     const sql = 'DELETE FROM ig_categories WHERE id = ?';
-    connection.query(sql, [category_id], (error, results) => {
-        if (error) {
-            console.error("Error deleting category:", error);
-            res.status(500).send('Error deleting category');
-        } else {
-            res.redirect('/categories');
+
+    db.query(sql, [id], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to delete category.');
+            return res.redirect('/categories');
         }
+        req.flash('success', 'Category deleted successfully!');
+        res.redirect('/categories');
     });
 });
 
+// Start Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
-
