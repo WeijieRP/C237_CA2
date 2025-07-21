@@ -16,35 +16,23 @@
             </button>
             <div class="collapse navbar-collapse" id="collapsibleNavbar">
                 <ul class="navbar-nav">
-                    <% if (user) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/members">Members</a>
+                    </li>
+                    <% if (user && user.role === 'admin') { %>
                         <li class="nav-item">
-                            <a class="nav-link" href="/members">Members</a>
-                        </li>
-                        <% if (user.role === 'admin') { %>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/ig_roles">IG Roles</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/addMember">Add New Member</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="/addIgRole">Add New IG Role</a>
-                            </li>
-                        <% } %>
-                        <li class="nav-item">
-                            <span class="nav-link text-white">Welcome, <%= user.username %>!</span>
+                            <a class="nav-link" href="/ig_roles">IG Roles</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/logout">Logout</a>
-                        </li>
-                    <% } else { %>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/login">Login</a>
+                            <a class="nav-link" href="/addMember">Add New Member</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/register">Register</a>
+                            <a class="nav-link" href="/addIgRole">Add New IG Role</a>
                         </li>
                     <% } %>
+                    <li class="nav-item">
+                        <span class="nav-link text-white">Welcome, <%= user.username %>! (Role: <%= user.role %>)</span>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -69,7 +57,7 @@
             </div>
         <% } %>
 
-        <% if (user.role === 'admin') { %>
+        <% if (user && user.role === 'admin') { %>
             <a href="/addIgRole" class="btn btn-primary mb-3">Add New IG Role</a>
         <% } %>
 
@@ -79,7 +67,7 @@
                     <tr>
                         <th width="200">Role Title</th>
                         <th width="400">Description</th>
-                        <% if (user.role === 'admin') { %>
+                        <% if (user && user.role === 'admin') { %>
                             <th width="100">Edit</th>
                             <th width="100">Delete</th>
                         <% } %>
@@ -90,7 +78,7 @@
                         <tr>
                             <td><%= role.title %></td>
                             <td><%= role.description %></td>
-                            <% if (user.role === 'admin') { %>
+                            <% if (user && user.role === 'admin') { %>
                                 <td><a href="/updateIgRole/<%= role.id %>" class="btn btn-sm btn-info">Edit</a></td>
                                 <td>
                                     <a href="/deleteIgRole/<%= role.id %>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this role? Members assigned to this role must be unassigned first.')">Delete</a>
