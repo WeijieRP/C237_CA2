@@ -1,0 +1,26 @@
+<h2>Interest Groups</h2>
+
+<form method="GET" action="/student/ig">
+    <input type="text" name="name" placeholder="Search by Name">
+    <button type="submit">Search</button>
+    <a href="/student/ig">Reset</a>
+</form>
+
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Category ID</th>
+        <th>School ID</th>
+        <th>Meeting Schedule</th>
+    </tr>
+    <% igs.forEach(ig => { %>
+    <tr>
+        <td><%= ig.name %></td>
+        <td><%= ig.description %></td>
+        <td><%= ig.category_id %></td>
+        <td><%= ig.school_id %></td>
+        <td><%= ig.meeting_schedule %></td>
+    </tr>
+    <% }) %>
+</table>
