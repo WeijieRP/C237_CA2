@@ -52,101 +52,104 @@ app.use(session({
 app.use(flash());
 
 // Define routes
-app.get('/galleries',  (req, res) => {
-        const sql = "SELECT * FROM galleries";
-        mysql.query(sql, (error, results) => {
-        if (error) {
-            req.flash('error', 'Error fetching gallery');
-            return res.redirect('/');
-        }
-        res.render('galleries', { galleries: results });
+// show all galleries
+app.get('/galleries', (req, res) => {
+    connection.query('SELECT * FROM galleries', (err, results) => {
+        if (err) return res.status(500).send('Database Error');
+        res.render('galleries', { galleries: results, messages: req.flash('success') });
     });
-}); 
+});
 
-// View galleries
+// show gallery + comments
 app.get('/galleries/:id', (req, res) => {
-  // Extract the gallery ID from the request parameters
-  const galleryId = req.params.id;
+    const id = req.params.id;
 
-  // Fetch data from MySQL based on the product ID
-  connection.query('SELECT * FROM products WHERE galleryId = ?', [galleryId], (error, results) => {
-      if (error) throw error;
+    const gallerySql = 'SELECT * FROM galleries WHERE id = ?';
+    const commentsSql = 'SELECT * FROM gallery_comments WHERE gallery_id = ? ORDER BY created_at DESC';
 
-      // Check if any product with the given ID was found
-      if (results.length > 0) {
-          // Render HTML page with the product data
-          res.render('gallery', { gallery: results[0], user: req.session.user  });
-      } else {
-          // If no product with the given ID was found, render a 404 page or handle it accordingly
-          res.status(404).send('Image not found');
-      }
-  });
-});
+    connection.query(gallerySql, [id], (err, galleryResult) => {
+        if (err) return res.status(500).send('Error fetching gallery');
+        if (galleryResult.length === 0) return res.status(404).send('Gallery not found');
 
-// Add image
-app.post('/addImage', upload.single('image'),  (req, res) => {
-    // Extract product data from the request body
-    const { ig_id, caption, upload_date} = req.body;
-    let media_url;
-    if (req.file) {
-        media_url = req.file.filename; // Save only the filename
-    } else {
-        media_url = null;
-    }
-
-    const sql = 'INSERT INTO galleries (productName, quantity, price, image) VALUES (?, ?, ?, ?)';
-    // Insert the new product into the database
-    connection.query(sql , [ig_id, caption, upload_date, media_url], (error, results) => {
-        if (error) {
-            // Handle any error that occurs during the database operation
-            console.error("Error adding product:", error);
-            res.status(500).send('Error adding product');
-        } else {
-            // Send a success response
-            res.redirect('/galleries');
-        }
+        connection.query(commentsSql, [id], (err, commentResults) => {
+            if (err) return res.status(500).send('Error fetching comments');
+            res.render('gallery', {
+                gallery: galleryResult[0],
+                comments: commentResults,
+                messages: req.flash('success')
+            });
+        });
     });
 });
 
-// Update Galleries
-app.post('/updateGalleries/:id', upload.single('image'), (req, res) => {
-    const id = req.params.id;
-    // Extract product data from the request body
+// add gallery
+app.post('/galleries', upload.single('image'), (req, res) => {
     const { ig_id, caption, upload_date } = req.body;
-    let media_url  = req.body.currentImage; //retrieve current image filename
-    if (req.file) { //if new image is uploaded
-        media_url = req.file.filename; // set image to be new image filename
-    } 
+    const media_url = req.file ? req.file.filename : null;
 
-    const sql = 'UPDATE galleries SET ig_id = ? , caption = ?, upload_date = ?, media_url =? WHERE productId = ?';
-    // Insert the new product into the database
-    connection.query(sql, [ig_id, caption, upload_date, media_url, id], (error, results) => {
-        if (error) {
-            // Handle any error that occurs during the database operation
-            console.error("Error updating product:", error);
-            res.status(500).send('Error updating product');
-        } else {
-            // Send a success response
-            res.redirect('/inventory');
-        }
+    const sql = 'INSERT INTO galleries (ig_id, caption, upload_date, media_url) VALUES (?, ?, ?, ?)';
+    connection.query(sql, [ig_id, caption, upload_date, media_url], (err) => {
+        if (err) return res.status(500).send('Error creating gallery');
+        req.flash('success', 'Gallery created successfully');
+        res.redirect('/galleries');
     });
 });
 
-// Delete
-app.get('/deleteImage/:id', (req, res) => {
+// update gallery
+app.post('/galleries/:id/edit', upload.single('image'), (req, res) => {
     const id = req.params.id;
+    const { ig_id, caption, upload_date, currentImage } = req.body;
+    const media_url = req.file ? req.file.filename : currentImage;
 
-    connection.query('DELETE FROM galleries WHERE id = ?', [id], (error, results) => {
-        if (error) {
-            // Handle any error that occurs during the database operation
-            console.error("Error deleting product:", error);
-            res.status(500).send('Error deleting product');
-        } else {
-            // Send a success response
-            res.redirect('/galleries');
-        }
+    const sql = 'UPDATE galleries SET ig_id = ?, caption = ?, upload_date = ?, media_url = ? WHERE id = ?';
+    connection.query(sql, [ig_id, caption, upload_date, media_url, id], (err) => {
+        if (err) return res.status(500).send('Error updating gallery');
+        req.flash('success', 'Gallery updated');
+        res.redirect('/galleries');
     });
 });
+
+// delete gallery
+app.get('/galleries/:id/delete', (req, res) => {
+    const id = req.params.id;
+    connection.query('DELETE FROM galleries WHERE id = ?', [id], (err) => {
+        if (err) return res.status(500).send('Error deleting gallery');
+        req.flash('success', 'Gallery deleted');
+        res.redirect('/galleries');
+    });
+});
+
+/* ---------------------- Comments ---------------------- */
+
+// add comment
+app.post('/galleries/:id/comment', (req, res) => {
+    const galleryId = req.params.id;
+    const { comment, student_id } = req.body;
+
+    const sql = 'INSERT INTO gallery_comments (gallery_id, student_id, comment, created_at) VALUES (?, ?, ?, NOW())';
+    connection.query(sql, [galleryId, student_id, comment], (err) => {
+        if (err) return res.status(500).send('Error adding comment');
+        req.flash('success', 'Comment added');
+        res.redirect(`/galleries/${galleryId}`);
+    });
+});
+
+// delete comment
+app.get('/comments/:id/delete', (req, res) => {
+    const commentId = req.params.id;
+
+    connection.query('SELECT gallery_id FROM gallery_comments WHERE id = ?', [commentId], (err, result) => {
+        if (err || result.length === 0) return res.status(500).send('Error finding comment');
+        const galleryId = result[0].gallery_id;
+
+        connection.query('DELETE FROM gallery_comments WHERE id = ?', [commentId], (err) => {
+            if (err) return res.status(500).send('Error deleting comment');
+            req.flash('success', 'Comment deleted');
+            res.redirect(`/galleries/${galleryId}`);
+        });
+    });
+});
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
