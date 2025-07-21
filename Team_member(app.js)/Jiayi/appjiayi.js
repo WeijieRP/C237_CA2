@@ -1,31 +1,35 @@
 const express = require('express');
 const mysql = require('mysql2');
-const path = require('path');
 const session = require('express-session');
 const flash = require('connect-flash');
+const path = require('path');
 
 const app = express();
 
-// Database Connection
-const db = mysql.createConnection({
+// MySQL Connection
+const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'Group5@123?',
-    database: 'igconnect'
+    database: 'igconnect',
+    port: 3306
 });
 
-db.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to MySQL database');
+connection.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL:', err);
+        process.exit(1); // Graceful exit on DB error
+    }
+    console.log('Connected to MySQL database: igconnect');
 });
 
 // Middleware Setup
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(session({
-    secret: 'secretkey',
+    secret: 'supersecretkey',  // Use env variable in production
     resave: false,
     saveUninitialized: true,
     cookie: { maxAge: 1000 * 60 * 60 * 24 * 7 }
@@ -33,7 +37,6 @@ app.use(session({
 
 app.use(flash());
 
-// Pass flash messages to all views
 app.use((req, res, next) => {
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
@@ -43,186 +46,197 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Route: Chatbot Page
-app.get('/chat', (req, res) => {
-    res.render('chatbot');
+// Simulate Logged-In User (For Testing)
+app.use((req, res, next) => {
+    if (!req.session.user) {
+        req.session.user = {
+            id: 100,
+            username: 'TestAdmin',
+            role: 'admin' // Change to 'user' for student
+        };
+    }
+    next();
 });
 
-// Route: View all Interest Groups
-app.get('/ig', (req, res) => {
-    const sql = 'SELECT * FROM interest_groups';
-    db.query(sql, (err, results) => {
-        if (err) {
-            req.flash('error', 'Error retrieving Interest Groups.');
-            return res.redirect('/');
-        }
-        res.render('viewIGs', { igs: results });
-    });
-});
+// Role Middleware
+const checkAuthenticated = (req, res, next) => {
+    if (req.session.user) {
+        return next();
+    } else {
+        req.flash('error', 'Please log in first.');
+        res.redirect('/login');
+    }
+};
 
-// Route: Render Add Interest Group Form
-app.get('/addIG', (req, res) => {
-    const categoriesSql = 'SELECT * FROM ig_categories';
-    const schoolsSql = 'SELECT * FROM schools';
+const checkAdmin = (req, res, next) => {
+    if (req.session.user && req.session.user.role === 'admin') {
+        return next();
+    } else {
+        req.flash('error', 'Access denied. Admin only.');
+        res.redirect('/');
+    }
+};
 
-    db.query(categoriesSql, (err, categories) => {
-        if (err) return res.status(500).send('Error fetching categories');
-        db.query(schoolsSql, (err2, schools) => {
-            if (err2) return res.status(500).send('Error fetching schools');
-            res.render('addIG', { categories, schools });
-        });
-    });
-});
+// ---------- INTEREST GROUP CATEGORIES ----------
 
-// Route: Handle Add Interest Group
-app.post('/addIG', (req, res) => {
-    const { name, category_id, description, school_id, meeting_schedule } = req.body;
-    const sql = 'INSERT INTO interest_groups (name, category_id, description, school_id, meeting_schedule) VALUES (?, ?, ?, ?, ?)';
-
-    db.query(sql, [name, category_id, description, school_id, meeting_schedule], (err) => {
-        if (err) {
-            req.flash('error', 'Failed to add Interest Group.');
-            return res.redirect('/ig');
-        }
-        req.flash('success', 'Interest Group added successfully!');
-        res.redirect('/ig');
-    });
-});
-
-// Route: Render Edit Interest Group Form
-app.get('/editIG/:id', (req, res) => {
-    const id = req.params.id;
-    const sql = 'SELECT * FROM interest_groups WHERE id = ?';
-
-    db.query(sql, [id], (err, results) => {
-        if (err || results.length === 0) {
-            req.flash('error', 'Interest Group not found.');
-            return res.redirect('/ig');
-        }
-
-        const categoriesSql = 'SELECT * FROM ig_categories';
-        const schoolsSql = 'SELECT * FROM schools';
-
-        db.query(categoriesSql, (err2, categories) => {
-            if (err2) return res.status(500).send('Error fetching categories');
-            db.query(schoolsSql, (err3, schools) => {
-                if (err3) return res.status(500).send('Error fetching schools');
-                res.render('editIG', { ig: results[0], categories, schools });
-            });
-        });
-    });
-});
-
-// Route: Handle Edit Interest Group
-app.post('/editIG/:id', (req, res) => {
-    const id = req.params.id;
-    const { name, category_id, description, school_id, meeting_schedule } = req.body;
-
-    const sql = 'UPDATE interest_groups SET name = ?, category_id = ?, description = ?, school_id = ?, meeting_schedule = ? WHERE id = ?';
-    db.query(sql, [name, category_id, description, school_id, meeting_schedule, id], (err) => {
-        if (err) {
-            req.flash('error', 'Failed to update Interest Group.');
-            return res.redirect('/ig');
-        }
-        req.flash('success', 'Interest Group updated successfully!');
-        res.redirect('/ig');
-    });
-});
-
-// Route: Delete Interest Group
-app.get('/deleteIG/:id', (req, res) => {
-    const id = req.params.id;
-    const sql = 'DELETE FROM interest_groups WHERE id = ?';
-
-    db.query(sql, [id], (err) => {
-        if (err) {
-            req.flash('error', 'Failed to delete Interest Group.');
-            return res.redirect('/ig');
-        }
-        req.flash('success', 'Interest Group deleted successfully!');
-        res.redirect('/ig');
-    });
-});
-
-// Route: View Categories
-app.get('/categories', (req, res) => {
+// View all categories
+app.get('/categories', checkAuthenticated, (req, res) => {
     const sql = 'SELECT * FROM ig_categories';
-    db.query(sql, (err, results) => {
+    connection.query(sql, (err, results) => {
         if (err) {
-            req.flash('error', 'Error retrieving categories.');
+            req.flash('error', 'Error fetching categories.');
             return res.redirect('/');
         }
-        res.render('viewCategories', { categories: results });
+        res.render('viewCategories', { categories: results, user: req.session.user });
     });
 });
 
-// Route: Render Add Category Form
-app.get('/addCategory', (req, res) => {
-    res.render('addCategory');
+// Add category form
+app.get('/addCategory', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('addCategory', { user: req.session.user });
 });
 
-// Route: Handle Add Category
-app.post('/addCategory', (req, res) => {
+// Add category
+app.post('/addCategory', checkAuthenticated, checkAdmin, (req, res) => {
     const { name, description } = req.body;
     const sql = 'INSERT INTO ig_categories (name, description) VALUES (?, ?)';
-
-    db.query(sql, [name, description], (err) => {
+    connection.query(sql, [name, description], (err) => {
         if (err) {
             req.flash('error', 'Failed to add category.');
             return res.redirect('/categories');
         }
-        req.flash('success', 'Category added successfully!');
+        req.flash('success', 'Category added successfully.');
         res.redirect('/categories');
     });
 });
 
-// Route: Render Edit Category Form
-app.get('/editCategory/:id', (req, res) => {
-    const id = req.params.id;
+// Edit category form
+app.get('/editCategory/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const sql = 'SELECT * FROM ig_categories WHERE id = ?';
-
-    db.query(sql, [id], (err, results) => {
+    connection.query(sql, [req.params.id], (err, results) => {
         if (err || results.length === 0) {
             req.flash('error', 'Category not found.');
             return res.redirect('/categories');
         }
-        res.render('editCategory', { category: results[0] });
+        res.render('editCategory', { category: results[0], user: req.session.user });
     });
 });
 
-// Route: Handle Edit Category
-app.post('/editCategory/:id', (req, res) => {
-    const id = req.params.id;
+// Update category
+app.post('/editCategory/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const { name, description } = req.body;
     const sql = 'UPDATE ig_categories SET name = ?, description = ? WHERE id = ?';
-
-    db.query(sql, [name, description, id], (err) => {
+    connection.query(sql, [name, description, req.params.id], (err) => {
         if (err) {
             req.flash('error', 'Failed to update category.');
             return res.redirect('/categories');
         }
-        req.flash('success', 'Category updated successfully!');
+        req.flash('success', 'Category updated successfully.');
         res.redirect('/categories');
     });
 });
 
-// Route: Delete Category
-app.get('/deleteCategory/:id', (req, res) => {
-    const id = req.params.id;
+// Delete category
+app.get('/deleteCategory/:id', checkAuthenticated, checkAdmin, (req, res) => {
     const sql = 'DELETE FROM ig_categories WHERE id = ?';
-
-    db.query(sql, [id], (err) => {
+    connection.query(sql, [req.params.id], (err) => {
         if (err) {
             req.flash('error', 'Failed to delete category.');
             return res.redirect('/categories');
         }
-        req.flash('success', 'Category deleted successfully!');
+        req.flash('success', 'Category deleted.');
         res.redirect('/categories');
     });
 });
 
-// Start Server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// ---------- INTEREST GROUPS ----------
+
+// View all IGs
+app.get('/ig', checkAuthenticated, (req, res) => {
+    const sql = 'SELECT * FROM interest_groups';
+    connection.query(sql, (err, results) => {
+        if (err) {
+            req.flash('error', 'Error fetching IGs.');
+            return res.redirect('/');
+        }
+        res.render('viewIGs', { igs: results, user: req.session.user });
+    });
 });
+
+// Add IG form
+app.get('/addIG', checkAuthenticated, checkAdmin, (req, res) => {
+    connection.query('SELECT * FROM ig_categories', (err, categories) => {
+        if (err) {
+            req.flash('error', 'Error loading form.');
+            return res.redirect('/ig');
+        }
+        res.render('addIG', { categories, user: req.session.user });
+    });
+});
+
+// Add IG
+app.post('/addIG', checkAuthenticated, checkAdmin, (req, res) => {
+    const { name, category_id, description, school_id, meeting_schedule } = req.body;
+    const sql = 'INSERT INTO interest_groups (name, category_id, description, school_id, meeting_schedule) VALUES (?, ?, ?, ?, ?)';
+    connection.query(sql, [name, category_id, description, school_id, meeting_schedule], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to add IG.');
+            return res.redirect('/ig');
+        }
+        req.flash('success', 'Interest Group added.');
+        res.redirect('/ig');
+    });
+});
+
+// Edit IG form
+app.get('/editIG/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    connection.query('SELECT * FROM interest_groups WHERE id = ?', [req.params.id], (err, results) => {
+        if (err || results.length === 0) {
+            req.flash('error', 'IG not found.');
+            return res.redirect('/ig');
+        }
+        connection.query('SELECT * FROM ig_categories', (catErr, categories) => {
+            if (catErr) {
+                req.flash('error', 'Error loading categories.');
+                return res.redirect('/ig');
+            }
+            res.render('editIG', { ig: results[0], categories, user: req.session.user });
+        });
+    });
+});
+
+// Update IG
+app.post('/editIG/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const { name, category_id, description, school_id, meeting_schedule } = req.body;
+    const sql = 'UPDATE interest_groups SET name = ?, category_id = ?, description = ?, school_id = ?, meeting_schedule = ? WHERE id = ?';
+    connection.query(sql, [name, category_id, description, school_id, meeting_schedule, req.params.id], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to update IG.');
+            return res.redirect('/ig');
+        }
+        req.flash('success', 'Interest Group updated.');
+        res.redirect('/ig');
+    });
+});
+
+// Delete IG
+app.get('/deleteIG/:id', checkAuthenticated, checkAdmin, (req, res) => {
+    const sql = 'DELETE FROM interest_groups WHERE id = ?';
+    connection.query(sql, [req.params.id], (err) => {
+        if (err) {
+            req.flash('error', 'Failed to delete IG.');
+            return res.redirect('/ig');
+        }
+        req.flash('success', 'Interest Group deleted.');
+        res.redirect('/ig');
+    });
+});
+
+// ---------- Default Route ----------
+app.get('/', (req, res) => {
+    res.redirect('/ig');
+});
+
+// ---------- Start Server ----------
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

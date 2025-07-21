@@ -5,6 +5,13 @@
 </head>
 <body>
     <h1>Interest Groups</h1>
+    <form method="GET" action="/searchIG">
+    <input type="text" name="name" placeholder="Search by Name">
+    <input type="number" name="category_id" placeholder="Category ID">
+    <input type="number" name="school_id" placeholder="School ID">
+    <button type="submit">Search</button>
+</form>
+
 
     <% if (success) { %><p style="color: green;"><%= success %></p><% } %>
     <% if (error) { %><p style="color: red;"><%= error %></p><% } %>
