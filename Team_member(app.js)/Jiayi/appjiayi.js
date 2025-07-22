@@ -232,6 +232,62 @@ app.get('/deleteIG/:id', checkAuthenticated, checkAdmin, (req, res) => {
     });
 });
 
+app.get('/searchIG', (req, res) => {
+    const { name, category_id, school_id } = req.query;
+
+    let sql = 'SELECT * FROM interest_groups WHERE 1=1';
+    const params = [];
+
+    if (name) {
+        sql += ' AND name LIKE ?';
+        params.push(`%${name}%`);
+    }
+    if (category_id) {
+        sql += ' AND category_id = ?';
+        params.push(category_id);
+    }
+    if (school_id) {
+        sql += ' AND school_id = ?';
+        params.push(school_id);
+    }
+
+    db.query(sql, params, (err, results) => {
+        if (err) {
+            req.flash('error', 'Error searching Interest Groups.');
+            return res.redirect('/ig');
+        }
+        res.render('viewIGs', { igs: results });
+    });
+});
+
+function isStudent(req, res, next) {
+    if (req.session.role === 'student') return next();
+    req.flash('error', 'Access denied.');
+    return res.redirect('/');
+}
+
+// Route: Student View All IGs + Search
+app.get('/student/ig', isStudent, (req, res) => {
+    const { name } = req.query;
+
+    let sql = 'SELECT * FROM interest_groups WHERE 1=1';
+    const params = [];
+
+    if (name) {
+        sql += ' AND name LIKE ?';
+        params.push(`%${name}%`);
+    }
+
+    db.query(sql, params, (err, results) => {
+        if (err) {
+            req.flash('error', 'Error retrieving Interest Groups.');
+            return res.redirect('/');
+        }
+        res.render('student_viewIGs', { igs: results });
+    });
+});
+
+
 // ---------- Default Route ----------
 app.get('/', (req, res) => {
     res.redirect('/ig');
